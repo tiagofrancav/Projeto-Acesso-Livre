@@ -41,60 +41,58 @@
 
     <main class="py-5">
         <div class="container" id="profileRoot">
-            <div id="profileLoading" class="alert alert-info" role="status">Carregando informacoes do perfil...</div>
+            <div id="profileLoading" class="alert alert-info shadow-sm border-0" role="status">Carregando informacoes do perfil...</div>
 
-            <header class="profile-header text-center mb-4">
-                <img src="https://via.placeholder.com/120?text=UA" alt="Avatar" class="profile-img mb-3 rounded-circle">
-                <h1 class="mb-1" id="profileName">Usuario</h1>
-                <p class="text-muted" id="profileMemberSince">Membro desde -</p>
+            <header class="profile-halo text-center mb-4">
+                <img src="https://via.placeholder.com/160?text=UA" alt="Avatar" class="profile-avatar mb-3">
+                <div class="badge badge-soft mb-2" id="profileMemberSince">Membro desde -</div>
+                <h1 class="mb-0 display-5" id="profileName">Usuario</h1>
+                <p class="text-muted-strong mt-1">Bem-vindo ao seu painel de mobilidade</p>
             </header>
 
-            <div class="row g-3 mb-4">
+            <section class="row g-3 mb-5">
                 <div class="col-12 col-md-4">
-                    <div class="card border-0 shadow-sm text-center">
-                        <div class="card-body">
-                            <h2 class="h3 mb-0" id="profileStatsPlaces">0</h2>
-                            <p class="text-muted mb-0">Locais cadastrados</p>
-                        </div>
+                    <div class="stat-pill h-100 d-flex flex-column align-items-center justify-content-center text-center">
+                        <h2 id="profileStatsPlaces">0</h2>
+                        <p>Locais cadastrados</p>
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
-                    <div class="card border-0 shadow-sm text-center">
-                        <div class="card-body">
-                            <h2 class="h3 mb-0" id="profileStatsReviews">0</h2>
-                            <p class="text-muted mb-0">Avaliacoes</p>
-                        </div>
+                    <div class="stat-pill h-100 d-flex flex-column align-items-center justify-content-center text-center">
+                        <h2 id="profileStatsReviews">0</h2>
+                        <p>Avaliacoes enviadas</p>
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
-                    <div class="card border-0 shadow-sm text-center">
-                        <div class="card-body">
-                            <h2 class="h3 mb-0" id="profileStatsFavorites">0</h2>
-                            <p class="text-muted mb-0">Favoritos</p>
-                        </div>
+                    <div class="stat-pill h-100 d-flex flex-column align-items-center justify-content-center text-center">
+                        <h2 id="profileStatsFavorites">0</h2>
+                        <p>Favoritos salvos</p>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <ul class="nav nav-pills mb-4" id="profileTabs" role="tablist">
-                <li class="nav-item" role="presentation"><button class="nav-link active" id="activity-tab" data-bs-toggle="pill" data-bs-target="#activity" type="button" role="tab">Atividade</button></li>
-                <li class="nav-item" role="presentation"><button class="nav-link" id="reviews-tab" data-bs-toggle="pill" data-bs-target="#reviews" type="button" role="tab">Avaliacoes</button></li>
-                <li class="nav-item" role="presentation"><button class="nav-link" id="places-tab" data-bs-toggle="pill" data-bs-target="#places" type="button" role="tab">Meus Locais</button></li>
-                <li class="nav-item" role="presentation"><button class="nav-link" id="favorites-tab" data-bs-toggle="pill" data-bs-target="#favorites" type="button" role="tab">Favoritos</button></li>
-            </ul>
+            <section class="mb-4">
+                <h2 class="section-title mb-3">Sua jornada</h2>
+                <ul class="nav nav-pills tab-modern" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation"><button class="nav-link active" id="activity-tab" data-bs-toggle="pill" data-bs-target="#activity" type="button" role="tab"><i class="fas fa-bolt me-2"></i>Atividade</button></li>
+                    <li class="nav-item" role="presentation"><button class="nav-link" id="reviews-tab" data-bs-toggle="pill" data-bs-target="#reviews" type="button" role="tab"><i class="fas fa-star-half-stroke me-2"></i>Avaliacoes</button></li>
+                    <li class="nav-item" role="presentation"><button class="nav-link" id="places-tab" data-bs-toggle="pill" data-bs-target="#places" type="button" role="tab"><i class="fas fa-map-location-dot me-2"></i>Meus Locais</button></li>
+                    <li class="nav-item" role="presentation"><button class="nav-link" id="favorites-tab" data-bs-toggle="pill" data-bs-target="#favorites" type="button" role="tab"><i class="fas fa-heart me-2"></i>Favoritos</button></li>
+                </ul>
+            </section>
 
             <div class="tab-content" id="profileTabsContent">
                 <div class="tab-pane fade show active" id="activity" role="tabpanel">
-                    <div id="profileActivityList"></div>
+                    <div class="activity-timeline" id="profileActivityList"></div>
                 </div>
                 <div class="tab-pane fade" id="reviews" role="tabpanel">
-                    <div id="profileReviewsList"></div>
+                    <div class="list-modern" id="profileReviewsList"></div>
                 </div>
                 <div class="tab-pane fade" id="places" role="tabpanel">
-                    <div id="profilePlacesList"></div>
+                    <div class="list-modern" id="profilePlacesList"></div>
                 </div>
                 <div class="tab-pane fade" id="favorites" role="tabpanel">
-                    <div id="profileFavoritesList"></div>
+                    <div class="list-modern" id="profileFavoritesList"></div>
                 </div>
             </div>
         </div>
