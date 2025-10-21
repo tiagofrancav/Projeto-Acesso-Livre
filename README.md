@@ -107,7 +107,7 @@ Arquivo-chave: `public/assets/js/maps.js`.
 ## ✅ Roadmap / pendências
 
 - [x] Persistir as seleções completas de acessibilidade (checkboxes) no backend
-- [ ] Implementar reviews e favoritos (APIs + UI)
+- [x] Implementar reviews e favoritos (APIs + UI)
 - [ ] Melhorar UX (mensagens de erro, loading states, tratamento de token expirado)
 - [ ] Geocodificar endereço → latitude/longitude automaticamente ao cadastrar local
 - [ ] Documentar uma coleção de requests (Insomnia/Postman) e adicionar testes automatizados
@@ -131,6 +131,7 @@ Defina aqui a licença desejada (MIT, Apache, GPL...). Enquanto isso, considere 
 ---
 
 Feito com ☕ e propósito por quem acredita em cidades mais inclusivas. Lace o tênis e vamos abrir caminhos juntos! 💚
+
 
 
 

@@ -13,6 +13,8 @@
     login: '/auth/login',
     register: '/users',
     place: '/places',
+    placeFavorites: (id) => `/places/${id}/favorites`,
+    placeReviews: (id) => `/places/${id}/reviews`,
     questionnaire: '/feedback',
     me: '/users/me'
   };
@@ -783,14 +785,13 @@
     });
   }
 
-  function renderPlaceReviews(place) {
+  function renderPlaceReviewsList(reviews) {
     const wrapper = document.getElementById('placeReviewsList');
     const empty = document.getElementById('placeReviewsEmpty');
     if (!wrapper) return;
     wrapper.innerHTML = '';
 
-    const reviews = place.reviews || [];
-    if (!reviews.length) {
+    if (!reviews || !reviews.length) {
       if (empty) empty.classList.remove('d-none');
       return;
     }
@@ -832,6 +833,151 @@
     });
   }
 
+  function applyFavoriteButtonState(button, isFavorite) {
+    if (!button) return;
+    button.dataset.favoriteState = isFavorite ? 'on' : 'off';
+    button.classList.toggle('btn-success', isFavorite);
+    button.classList.toggle('btn-outline-success', !isFavorite);
+    button.innerHTML = isFavorite
+      ? '<i class="fas fa-heart me-2"></i>Remover dos favoritos'
+      : '<i class="far fa-heart me-2"></i>Adicionar aos favoritos';
+  }
+
+  async function toggleFavorite(button, placeId) {
+    if (!button) return;
+    const isFavorite = button.dataset.favoriteState === 'on';
+    const method = isFavorite ? 'DELETE' : 'POST';
+    const container = button.closest('.card-body') || document.body;
+    button.disabled = true;
+    try {
+      await apiRequest(ENDPOINTS.placeFavorites(placeId), {
+        method,
+        body: method === 'POST' ? {} : undefined
+      });
+      applyFavoriteButtonState(button, !isFavorite);
+    } catch (err) {
+      if (err.status === 401) {
+        clearSession();
+        window.location.href = 'login.html';
+        return;
+      }
+      console.error('[favorite] erro', err);
+      showAlert(container, 'danger', err.data?.error || 'Erro ao atualizar favorito.');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  function setupFavoriteButton(button, hintElement, placeId, isFavorite) {
+    if (!button) return;
+    const token = getToken();
+    applyFavoriteButtonState(button, Boolean(isFavorite));
+    if (!token) {
+      button.classList.remove('btn-success');
+      button.classList.add('btn-outline-secondary');
+      button.innerHTML = '<i class="fas fa-right-to-bracket me-2"></i>Entrar para favoritar';
+      button.disabled = false;
+      hintElement?.classList.remove('d-none');
+      button.addEventListener('click', () => {
+        window.location.href = 'login.html';
+      });
+      return;
+    }
+    hintElement?.classList.add('d-none');
+    button.disabled = false;
+    button.addEventListener('click', () => toggleFavorite(button, placeId));
+  }
+
+  function calculateAverageRating(reviews = []) {
+    if (!reviews.length) return null;
+    const total = reviews.reduce((sum, review) => sum + (Number(review.rating) || 0), 0);
+    return Number((total / reviews.length).toFixed(1));
+  }
+
+  function updatePlaceRatingSummary(reviews = []) {
+    const average = calculateAverageRating(reviews);
+    const countText = `${reviews.length} avaliacao(oes)`;
+    document.getElementById('placeRatingValue')?.replaceChildren(document.createTextNode(average ? average.toString() : 'Novo'));
+    renderStars(document.getElementById('placeRatingStars'), average || 0);
+    document.getElementById('placeReviewCount')?.replaceChildren(document.createTextNode(countText));
+  }
+
+  async function fetchPlaceReviews(placeId) {
+    try {
+      const data = await apiRequest(ENDPOINTS.placeReviews(placeId));
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error('[reviews] erro ao buscar lista', err);
+      return null;
+    }
+  }
+
+  function setupReviewForm(form, placeId, onSuccess) {
+    const warning = document.getElementById('placeReviewLoginWarning');
+    const feedback = document.getElementById('placeReviewFeedback');
+    const token = getToken();
+
+    if (!form) {
+      warning?.classList.remove('d-none');
+      return;
+    }
+
+    if (!token) {
+      form.classList.add('d-none');
+      warning?.classList.remove('d-none');
+      return;
+    }
+
+    warning?.classList.add('d-none');
+    form.classList.remove('d-none');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const ratingInput = form.querySelector('[name="rating"]');
+      const commentInput = form.querySelector('[name="comment"]');
+      const ratingValue = Number(ratingInput?.value || '');
+      const comment = commentInput?.value?.trim() || '';
+
+      if (!Number.isFinite(ratingValue) || ratingValue < 1 || ratingValue > 5) {
+        if (feedback) {
+          feedback.className = 'small mt-2 text-danger';
+          feedback.textContent = 'Informe uma nota entre 1 e 5.';
+        }
+        return;
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn?.setAttribute('disabled', 'disabled');
+      if (feedback) feedback.textContent = '';
+
+      try {
+        const review = await apiRequest(ENDPOINTS.placeReviews(placeId), {
+          method: 'POST',
+          body: { rating: ratingValue, comment }
+        });
+        form.reset();
+        if (feedback) {
+          feedback.className = 'small mt-2 text-success';
+          feedback.textContent = 'Obrigado! Sua avaliação foi registrada.';
+        }
+        onSuccess?.(review);
+      } catch (err) {
+        if (err.status === 401) {
+          clearSession();
+          window.location.href = 'login.html';
+          return;
+        }
+        console.error('[reviews] erro ao criar', err);
+        if (feedback) {
+          feedback.className = 'small mt-2 text-danger';
+          feedback.textContent = err.data?.error || 'Não foi possível enviar a avaliação.';
+        }
+      } finally {
+        submitBtn?.removeAttribute('disabled');
+      }
+    });
+  }
+
   async function initLocalDetalhes() {
     const detailRoot = document.getElementById('placeDetailRoot');
     if (!detailRoot) return;
@@ -851,11 +997,6 @@
       document.getElementById('placeAddress')?.replaceChildren(document.createTextNode(place.address || ''));
       document.getElementById('placeDescription')?.replaceChildren(document.createTextNode(place.description || ''));
 
-      const avgRating = place.stats?.averageRating;
-      document.getElementById('placeRatingValue')?.replaceChildren(document.createTextNode(avgRating ? avgRating.toString() : 'Novo'));
-      renderStars(document.getElementById('placeRatingStars'), avgRating || 0);
-      document.getElementById('placeReviewCount')?.replaceChildren(document.createTextNode(`${place.stats?.reviewCount || 0} avaliacao(oes)`));
-
       const phoneEl = document.getElementById('placeContactPhone');
       if (phoneEl) {
         phoneEl.textContent = place.phone || 'Nao informado';
@@ -871,7 +1012,32 @@
 
       renderFeatureBadges(document.getElementById('placeFeatureList'), place.features || [], { flags: place.accessibilityFlags });
       renderPlacePhotos(place);
-      renderPlaceReviews(place);
+      const favoriteButton = document.getElementById('favoriteToggle');
+      const favoriteHint = document.getElementById('favoriteHint');
+      setupFavoriteButton(favoriteButton, favoriteHint, id, place.isFavorite);
+
+      let currentReviews = Array.isArray(place.reviews) ? place.reviews.slice() : [];
+      const applyReviews = (reviews) => {
+        currentReviews = Array.isArray(reviews) ? reviews : [];
+        renderPlaceReviewsList(currentReviews);
+        updatePlaceRatingSummary(currentReviews);
+      };
+
+      applyReviews(currentReviews);
+
+      const reviewForm = document.getElementById('placeReviewForm');
+      setupReviewForm(reviewForm, id, async (newReview) => {
+        if (newReview) {
+          applyReviews([newReview, ...currentReviews]);
+        } else {
+          const refreshed = await fetchPlaceReviews(id);
+          if (refreshed) applyReviews(refreshed);
+        }
+      });
+
+      fetchPlaceReviews(id).then((latest) => {
+        if (latest) applyReviews(latest);
+      });
     } catch (err) {
       console.error('[local-detalhes] erro', err);
       showAlert(detailRoot, 'danger', err.data?.error || 'Erro ao carregar dados do local.');
@@ -1135,5 +1301,8 @@
 }
 
 })();
+
+
+
 
 

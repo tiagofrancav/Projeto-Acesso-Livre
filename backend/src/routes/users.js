@@ -30,6 +30,7 @@ function summarizePlace(place) {
     name: place.name,
     type: place.type,
     address: place.address,
+    accessibilityFlags: place.accessibilityFlags || null,
     phone: place.phone,
     website: place.website,
     description: place.description,
@@ -151,3 +152,5 @@ router.get('/me', requireAuth, async (req, res) => {
 });
 
 export default router;
+
+

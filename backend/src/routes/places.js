@@ -2,6 +2,9 @@ import express from 'express';
 import { prisma } from '../lib/prisma.js';
 import { optionalAuth } from '../middleware/auth.js';
 
+import favoritesRouter from './favorites.js';
+import reviewsRouter from './reviews.js';
+
 const router = express.Router();
 
 const FEATURE_LABELS = {
@@ -280,4 +283,11 @@ router.get('/:id', optionalAuth, async (req, res) => {
   }
 });
 
+router.use('/:id/favorites', favoritesRouter);
+router.use('/:id/reviews', reviewsRouter);
+
 export default router;
+
+
+
+
