@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Local | Livre Acesso</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-universal-access me-2"></i>Livre Acesso
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pesquisa.html">Buscar Locais</a></li>
+                    <li class="nav-item"><a class="nav-link" href="cadastro-local.html">Cadastrar Local</a></li>
+                    <li class="nav-item"><a class="nav-link" href="questionario.html">Avaliar Plataforma</a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="py-5">
+        <div class="container" id="placeDetailRoot">
+            <div id="placeLoading" class="alert alert-info" role="status">Carregando informacoes do local...</div>
+            <div class="row gy-4">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h1 class="page-title mb-1" id="placeTitle">Carregando...</h1>
+                                    <div class="d-flex flex-wrap align-items-center gap-2 text-muted">
+                                        <span class="badge bg-success" id="placeType">-</span>
+                                        <span id="placeAddress"></span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="d-block fs-4" id="placeRatingValue">-</strong>
+                                    <div id="placeRatingStars" class="text-warning"></div>
+                                    <small id="placeReviewCount" class="text-muted"></small>
+                                </div>
+                            </div>
+
+                            <p id="placeDescription" class="mb-4 text-secondary"></p>
+
+                            <div id="placeNoPhotos" class="alert alert-light" role="status">Nenhuma foto cadastrada para este local.</div>
+                            <div id="placeCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+                                <div class="carousel-indicators" id="placePhotosIndicators"></div>
+                                <div class="carousel-inner rounded" id="placePhotosInner"></div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#placeCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Anterior</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#placeCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Proximo</span>
+                                </button>
+                            </div>
+
+                            <h2 class="h5">Recursos de acessibilidade</h2>
+                            <div id="placeFeatureList" class="mb-4"></div>
+
+                            <h2 class="h5">Avaliacoes recentes</h2>
+                            <div id="placeReviewsEmpty" class="alert alert-light d-none">Ainda nao ha avaliacoes para este local.</div>
+                            <div id="placeReviewsList"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body">
+                            <h3 class="h6 text-uppercase text-muted mb-3">Informacoes de contato</h3>
+                            <p class="mb-2"><i class="fas fa-phone me-2"></i><span id="placeContactPhone">-</span></p>
+                            <p class="mb-0"><i class="fas fa-globe me-2"></i><span id="placeContactWebsite">-</span></p>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h3 class="h6 text-uppercase text-muted mb-3">Compartilhe</h3>
+                            <div class="d-flex gap-2">
+                                <a href="#" class="btn btn-outline-success btn-sm" role="button" aria-label="Compartilhar no WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                                <a href="#" class="btn btn-outline-success btn-sm" role="button" aria-label="Compartilhar no Facebook"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="btn btn-outline-success btn-sm" role="button" aria-label="Compartilhar no X"><i class="fab fa-x-twitter"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2025 Livre Acesso. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

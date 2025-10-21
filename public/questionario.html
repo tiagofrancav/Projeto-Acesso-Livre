@@ -1,0 +1,188 @@
+﻿<!DOCTYPE html>
+<!-- public build -->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Questionario | Livre Acesso</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <i class="fas fa-universal-access me-2"></i>Livre Acesso
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+          <li class="nav-item"><a class="nav-link" href="pesquisa.html">Buscar Locais</a></li>
+          <li class="nav-item"><a class="nav-link" href="cadastro-local.html">Cadastrar Local</a></li>
+          <li class="nav-item"><a class="nav-link" href="questionario.html">Avaliar Plataforma</a></li>
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+          <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="py-4">
+    <div class="container">
+      <h1 class="text-center mb-4 page-title">Questionario de Avaliacao</h1>
+      <p class="text-center mb-4">Sua opiniao ajuda a melhorar a experiencia de acessibilidade para todas as pessoas.</p>
+
+      <form id="formQuestionario" method="POST" class="mb-5">
+        <!-- Bloco 1 -->
+        <div class="card mb-4 p-4">
+          <h2 class="h5 border-bottom pb-2 mb-3">Bloco 1 — Perfil do respondente</h2>
+          <div class="mb-3">
+            <label class="form-label fw-semibold required-field">1. Voce se identifica como:</label>
+            <div class="ms-3">
+              <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1_opt1" value="Pessoa com deficiencia fisica" required><label class="form-check-label" for="q1_opt1">Pessoa com deficiencia fisica</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1_opt2" value="Pessoa com deficiencia visual"><label class="form-check-label" for="q1_opt2">Pessoa com deficiencia visual</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1_opt3" value="Pessoa com deficiencia auditiva"><label class="form-check-label" for="q1_opt3">Pessoa com deficiencia auditiva</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1_opt4" value="Pessoa com mobilidade reduzida"><label class="form-check-label" for="q1_opt4">Pessoa com mobilidade reduzida</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1_opt5" value="Familiar ou cuidador"><label class="form-check-label" for="q1_opt5">Familiar ou cuidador</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1_opt6" value="Usuario em geral"><label class="form-check-label" for="q1_opt6">Usuario em geral</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1_opt7" value="Profissional da area"><label class="form-check-label" for="q1_opt7">Profissional da area de acessibilidade</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1_opt8" value="Outro"><label class="form-check-label" for="q1_opt8">Outro (especifique)</label><input type="text" class="form-control mt-1" name="q1_outro" placeholder="Digite aqui"></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold required-field">2. Faixa etaria:</label>
+            <div class="ms-1 d-flex flex-wrap gap-2">
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q2" id="q2_opt1" value="Menor de 18" required><label class="form-check-label" for="q2_opt1">Menor de 18</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q2" id="q2_opt2" value="18-29"><label class="form-check-label" for="q2_opt2">18-29</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q2" id="q2_opt3" value="30-44"><label class="form-check-label" for="q2_opt3">30-44</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q2" id="q2_opt4" value="45-59"><label class="form-check-label" for="q2_opt4">45-59</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q2" id="q2_opt5" value="60+"><label class="form-check-label" for="q2_opt5">60+</label></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold required-field">3. Com que frequencia utiliza a plataforma?</label>
+            <div class="ms-3">
+              <div class="form-check"><input class="form-check-input" type="radio" name="q3" id="q3_opt1" value="Primeira vez" required><label class="form-check-label" for="q3_opt1">Primeira vez</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="q3" id="q3_opt2" value="Ocasionalmente"><label class="form-check-label" for="q3_opt2">Ocasionalmente</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="q3" id="q3_opt3" value="Frequentemente"><label class="form-check-label" for="q3_opt3">Frequentemente</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="q3" id="q3_opt4" value="Diariamente"><label class="form-check-label" for="q3_opt4">Diariamente</label></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 2 -->
+        <div class="card mb-4 p-4">
+          <h2 class="h5 border-bottom pb-2 mb-3">Bloco 2 — Usabilidade</h2>
+          <p class="text-muted small">Use a escala de 1 (muito insatisfeito) a 5 (muito satisfeito).</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold required-field">4. Facilidade de navegacao</label>
+            <div class="ms-1 d-flex flex-wrap gap-2" role="radiogroup" aria-label="Facilidade de navegacao">
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q4" id="q4_1" value="1" required><label class="form-check-label" for="q4_1">1</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q4" id="q4_2" value="2"><label class="form-check-label" for="q4_2">2</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q4" id="q4_3" value="3"><label class="form-check-label" for="q4_3">3</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q4" id="q4_4" value="4"><label class="form-check-label" for="q4_4">4</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q4" id="q4_5" value="5"><label class="form-check-label" for="q4_5">5</label></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold required-field">5. Clareza das informacoes</label>
+            <div class="ms-1 d-flex flex-wrap gap-2" role="radiogroup" aria-label="Clareza das informacoes">
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q5" id="q5_1" value="1" required><label class="form-check-label" for="q5_1">1</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q5" id="q5_2" value="2"><label class="form-check-label" for="q5_2">2</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q5" id="q5_3" value="3"><label class="form-check-label" for="q5_3">3</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q5" id="q5_4" value="4"><label class="form-check-label" for="q5_4">4</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q5" id="q5_5" value="5"><label class="form-check-label" for="q5_5">5</label></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold required-field">6. Facilidade para buscar locais</label>
+            <div class="ms-1 d-flex flex-wrap gap-2" role="radiogroup" aria-label="Facilidade para buscar locais">
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q6" id="q6_1" value="1" required><label class="form-check-label" for="q6_1">1</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q6" id="q6_2" value="2"><label class="form-check-label" for="q6_2">2</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q6" id="q6_3" value="3"><label class="form-check-label" for="q6_3">3</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q6" id="q6_4" value="4"><label class="form-check-label" for="q6_4">4</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q6" id="q6_5" value="5"><label class="form-check-label" for="q6_5">5</label></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold required-field">7. Facilidade para cadastrar locais</label>
+            <div class="ms-1 d-flex flex-wrap gap-2" role="radiogroup" aria-label="Facilidade para cadastrar locais">
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q7" id="q7_1" value="1" required><label class="form-check-label" for="q7_1">1</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q7" id="q7_2" value="2"><label class="form-check-label" for="q7_2">2</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q7" id="q7_3" value="3"><label class="form-check-label" for="q7_3">3</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q7" id="q7_4" value="4"><label class="form-check-label" for="q7_4">4</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q7" id="q7_5" value="5"><label class="form-check-label" for="q7_5">5</label></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 3 -->
+        <div class="card mb-4 p-4">
+          <h2 class="h5 border-bottom pb-2 mb-3">Bloco 3 — Impacto social</h2>
+          <div class="mb-3">
+            <label class="form-label fw-semibold required-field">8. O uso da plataforma ajudou a descobrir novos locais acessiveis?</label>
+            <div class="ms-3">
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q8" id="q8_s" value="Sim" required><label class="form-check-label" for="q8_s">Sim</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q8" id="q8_p" value="Parcialmente"><label class="form-check-label" for="q8_p">Parcialmente</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q8" id="q8_n" value="Nao"><label class="form-check-label" for="q8_n">Nao</label></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold required-field">9. O conteudo influencia a sua decisao de visitar um local?</label>
+            <div class="ms-3">
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q9" id="q9_s" value="Sim" required><label class="form-check-label" for="q9_s">Sim</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q9" id="q9_p" value="Parcialmente"><label class="form-check-label" for="q9_p">Parcialmente</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q9" id="q9_n" value="Nao"><label class="form-check-label" for="q9_n">Nao</label></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold required-field">10. Recomendaria a plataforma para outras pessoas?</label>
+            <div class="ms-3">
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q10" id="q10_s" value="Sim" required><label class="form-check-label" for="q10_s">Sim</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q10" id="q10_p" value="Parcialmente"><label class="form-check-label" for="q10_p">Parcialmente</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q10" id="q10_n" value="Nao"><label class="form-check-label" for="q10_n">Nao</label></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 4 -->
+        <div class="card mb-4 p-4">
+          <h2 class="h5 border-bottom pb-2 mb-3">Bloco 4 — Sugestoes</h2>
+          <div class="mb-3">
+            <label for="sugestoes" class="form-label fw-semibold">11. Sugestoes para melhoria da plataforma</label>
+            <textarea class="form-control" id="sugestoes" name="sugestoes" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="experiencia" class="form-label fw-semibold">12. Compartilhe uma experiencia positiva ou negativa</label>
+            <textarea class="form-control" id="experiencia" name="experiencia" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="contato" class="form-label fw-semibold">13. Email para contato (opcional)</label>
+            <input type="email" class="form-control" id="contato" name="contato" placeholder="seunome@email.com">
+          </div>
+        </div>
+
+        <div class="text-center">
+          <button type="submit" class="btn btn-success btn-lg px-4">Enviar questionario</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="bg-dark text-white py-4">
+    <div class="container text-center">
+      <p class="mb-0">&copy; 2025 Livre Acesso. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

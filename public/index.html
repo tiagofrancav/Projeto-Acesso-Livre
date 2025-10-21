@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<!-- public build -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>livre Acesso</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS Customizado -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Barra de Navegação -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-universal-access me-2"></i>Livre Acesso
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Início</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="pesquisa.html">Buscar Locais</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cadastro-local.html">Cadastrar Local</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="questionario.html">Avaliar Plataforma</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero-section bg-light py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold mb-3">Acessibilidade que conecta. Inclusão que transforma.</h1>
+            <p class="lead mb-4">Encontre locais acessíveis e compartilhe suas experiências para ajudar outras pessoas.</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <a href="pesquisa.html" class="btn btn-success btn-lg px-4 gap-3">Buscar Locais</a>
+                <a href="cadastro-local.html" class="btn btn-outline-secondary btn-lg px-4">Cadastrar Local</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Seção de Funcionalidades -->
+        <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Como nosso sistema pode te ajudar</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm text-center p-4">
+                        <div class="mb-3 text-success"><i class="fas fa-map-marked-alt fa-2x"></i></div>
+                        <h3 class="h5">Mapa acessivel</h3>
+                        <p class="mb-0 text-muted">Visualize facilmente locais com recursos de acessibilidade na sua regiao.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm text-center p-4">
+                        <div class="mb-3 text-success"><i class="fas fa-filter fa-2x"></i></div>
+                        <h3 class="h5">Filtros inteligentes</h3>
+                        <p class="mb-0 text-muted">Encontre estabelecimentos por tipo e recursos essenciais.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm text-center p-4">
+                        <div class="mb-3 text-success"><i class="fas fa-star fa-2x"></i></div>
+                        <h3 class="h5">Avaliacoes reais</h3>
+                        <p class="mb-0 text-muted">Compartilhe experiencias e ajude outras pessoas a planejar visitas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Locais Recentemente Cadastrados</h2>
+                <a href="pesquisa.html" class="btn btn-outline-success">Ver todos</a>
+            </div>
+            <div class="text-center my-4 d-none" id="recentPlacesLoading" role="status">
+                <div class="spinner-border text-success" aria-hidden="true"></div>
+            </div>
+            <div class="alert alert-info d-none" id="recentPlacesEmpty">Nenhum local cadastrado ainda. Volte mais tarde!</div>
+            <div class="row g-4" id="recentPlaces" aria-live="polite"></div>
+        </div>
+    </section>
+
+    <!-- Seção de Depoimentos -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">O que estão dizendo</h2>
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body p-4 text-center">
+                                        <img loading="lazy" src="assets/img/tiago_silva.png" class="rounded-circle mb-3" style="width: 400px; height: 400px; object-fit: cover;" alt="Depoimento 1">
+                                        <p class="lead mb-3">"Graças a esse sistema, consegui encontrar vários restaurantes acessíveis para comemorar meu aniversário com amigos. Foi uma experiência libertadora!"</p>
+                                        <h5 class="mb-1">Tiago Silva</h5>
+                                        <p class="text-muted">Usuário de cadeira de rodas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body p-4 text-center">
+                                        <img loading="lazy" src="assets/img/erika.png" class="rounded-circle mb-3" style="width: 400px; height: 400px; object-fit: cover;" alt="Depoimento 2">
+                                        <p class="lead mb-3">"Como mãe de uma criança com deficiência visual, esse sistema me ajuda a planejar nossos passeios com muito mais segurança e tranquilidade."</p>
+                                        <h5 class="mb-1">Erika Lucianny</h5>
+                                        <p class="text-muted">Mãe e cuidadora</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body p-4 text-center">
+                                        <img loading="lazy" src="assets/img/fabiana.png" class="rounded-circle mb-3" style="width: 400px; height: 400px; object-fit: cover;" alt="Depoimento 3">
+                                        <p class="lead mb-3">"Sou dona de um café e depois que cadastrei meu estabelecimento aqui, percebi um aumento significativo de clientes com deficiência. Todos ganham!"</p>
+                                        <h5 class="mb-1">Fabiana Mendes</h5>
+                                        <p class="text-muted">Proprietária de estabelecimento</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body p-4 text-center">
+                                        <img loading="lazy" src="assets/img/tiago_franca.jpg" class="rounded-circle mb-3" style="width: 400px; height: 400px; object-fit: cover;" alt="Depoimento 3">
+                                        <p class="lead mb-3">"Esse sistema foi um divisor de águas na minha vida. Pela primeira vez, consegui planejar meus passeios com autonomia e segurança."</p>
+                                        <h5 class="mb-1">Tiago França</h5>
+                                        <p class="text-muted">Pessoa com mobilidade reduzida</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Anterior</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Próximo</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chamada para Ação -->
+    <section class="py-5 bg-success text-white">
+        <div class="container text-center">
+            <h2 class="mb-4">Faça parte dessa rede de inclusão</h2>
+            <p class="lead mb-4">Cadastre-se agora e comece a explorar locais acessíveis ou contribua cadastrando novos lugares.</p>
+            <a href="cadastro-usuario.html" class="btn btn-light btn-lg px-4 me-2">Cadastre-se</a>
+            <a href="cadastro-local.html" class="btn btn-outline-light btn-lg px-4">Cadastrar Local</a>
+        </div>
+    </section>
+
+
+    <!-- Rodapé -->
+    <footer class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="mb-3">livre Acesso</h5>
+                    <p>Promovendo a inclusão através da tecnologia e colaboração.</p>
+                    <div class="social-icons">
+                        <a href="#" class="text-white me-2"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-white me-2"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-2"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h5 class="mb-3">Links</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="index.html" class="text-white">Início</a></li>
+                        <li class="mb-2"><a href="pesquisa.html" class="text-white">Buscar Locais</a></li>
+                        <li class="mb-2"><a href="cadastro-local.html" class="text-white">Cadastrar Local</a></li>
+                        <li class="mb-2"><a href="login.html" class="text-white">Login</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <h5 class="mb-3">Contato</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> contato@livreacesso.com</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i> (98) 98402-0154</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i> São Luís, MA - Brasil</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="mb-3">Newsletter</h5>
+                    <p>Assine nossa newsletter para receber novidades.</p>
+                    <form>
+                        <div class="input-group mb-3">
+                            <input type="email" class="form-control" placeholder="Seu e-mail" aria-label="Seu e-mail">
+                            <button class="btn btn-success" type="button">Assinar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">&copy; 2025 livre Acesso. Todos os direitos reservados.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="text-white me-3">Termos de Uso</a>
+                    <a href="#" class="text-white">Política de Privacidade</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
+
+
+
+
+

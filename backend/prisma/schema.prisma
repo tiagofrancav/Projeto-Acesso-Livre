@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  surname      String?
+  createdAt    DateTime  @default(now())
+  reviews      Review[]
+  places       Place[]   @relation("PlaceOwner")
+  favorites    Favorite[]
+  responses    QuestionnaireResponse[]
+}
+
+model Place {
+  id          Int            @id @default(autoincrement())
+  name        String
+  type        String
+  address     String
+  phone       String?
+  website     String?
+  lat         Float?
+  lng         Float?
+  description String?
+  createdAt   DateTime       @default(now())
+  ownerId     Int?
+  owner       User?          @relation("PlaceOwner", fields: [ownerId], references: [id])
+  features    PlaceFeature[]
+  photos      Photo[]
+  reviews     Review[]
+  favorites   Favorite[]
+}
+
+model Feature {
+  id            Int            @id @default(autoincrement())
+  key           String         @unique
+  label         String
+  placeFeatures PlaceFeature[]
+}
+
+model PlaceFeature {
+  placeId  Int
+  featureId Int
+  place    Place   @relation(fields: [placeId], references: [id])
+  feature  Feature @relation(fields: [featureId], references: [id])
+  @@id([placeId, featureId])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  userId    Int
+  placeId   Int
+  user      User     @relation(fields: [userId], references: [id])
+  place     Place    @relation(fields: [placeId], references: [id])
+}
+
+model Photo {
+  id        Int      @id @default(autoincrement())
+  url       String
+  createdAt DateTime @default(now())
+  placeId   Int
+  place     Place    @relation(fields: [placeId], references: [id])
+}
+
+model Favorite {
+  userId    Int
+  placeId   Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  place     Place    @relation(fields: [placeId], references: [id])
+  @@id([userId, placeId])
+}
+
+model QuestionnaireResponse {
+  id        Int      @id @default(autoincrement())
+  data      Json
+  createdAt DateTime @default(now())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+}

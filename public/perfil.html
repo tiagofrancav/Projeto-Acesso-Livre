@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil | Livre Acesso</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-universal-access me-2"></i>Livre Acesso
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pesquisa.html">Buscar Locais</a></li>
+                    <li class="nav-item"><a class="nav-link" href="cadastro-local.html">Cadastrar Local</a></li>
+                    <li class="nav-item"><a class="nav-link" href="questionario.html">Avaliar Plataforma</a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> <span id="navbarUserName">Perfil</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html">Meu Perfil</a></li>
+                            <li><a class="dropdown-item" href="#" data-action="logout">Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="py-5">
+        <div class="container" id="profileRoot">
+            <div id="profileLoading" class="alert alert-info" role="status">Carregando informacoes do perfil...</div>
+
+            <header class="profile-header text-center mb-4">
+                <img src="https://via.placeholder.com/120?text=UA" alt="Avatar" class="profile-img mb-3 rounded-circle">
+                <h1 class="mb-1" id="profileName">Usuario</h1>
+                <p class="text-muted" id="profileMemberSince">Membro desde -</p>
+            </header>
+
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 shadow-sm text-center">
+                        <div class="card-body">
+                            <h2 class="h3 mb-0" id="profileStatsPlaces">0</h2>
+                            <p class="text-muted mb-0">Locais cadastrados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 shadow-sm text-center">
+                        <div class="card-body">
+                            <h2 class="h3 mb-0" id="profileStatsReviews">0</h2>
+                            <p class="text-muted mb-0">Avaliacoes</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 shadow-sm text-center">
+                        <div class="card-body">
+                            <h2 class="h3 mb-0" id="profileStatsFavorites">0</h2>
+                            <p class="text-muted mb-0">Favoritos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <ul class="nav nav-pills mb-4" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation"><button class="nav-link active" id="activity-tab" data-bs-toggle="pill" data-bs-target="#activity" type="button" role="tab">Atividade</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" id="reviews-tab" data-bs-toggle="pill" data-bs-target="#reviews" type="button" role="tab">Avaliacoes</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" id="places-tab" data-bs-toggle="pill" data-bs-target="#places" type="button" role="tab">Meus Locais</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" id="favorites-tab" data-bs-toggle="pill" data-bs-target="#favorites" type="button" role="tab">Favoritos</button></li>
+            </ul>
+
+            <div class="tab-content" id="profileTabsContent">
+                <div class="tab-pane fade show active" id="activity" role="tabpanel">
+                    <div id="profileActivityList"></div>
+                </div>
+                <div class="tab-pane fade" id="reviews" role="tabpanel">
+                    <div id="profileReviewsList"></div>
+                </div>
+                <div class="tab-pane fade" id="places" role="tabpanel">
+                    <div id="profilePlacesList"></div>
+                </div>
+                <div class="tab-pane fade" id="favorites" role="tabpanel">
+                    <div id="profileFavoritesList"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2025 Livre Acesso. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

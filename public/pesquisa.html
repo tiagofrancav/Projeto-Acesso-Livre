@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Locais | Livre Acesso</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-universal-access me-2"></i>Livre Acesso
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pesquisa.html">Buscar Locais</a></li>
+                    <li class="nav-item"><a class="nav-link" href="cadastro-local.html">Cadastrar Local</a></li>
+                    <li class="nav-item"><a class="nav-link" href="questionario.html">Avaliar Plataforma</a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="py-4">
+        <div class="container">
+            <h1 class="mb-4 page-title">Buscar Locais Acessiveis</h1>
+
+            <div class="filter-section">
+                <form id="searchForm" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="localizacao" class="form-label">Localizacao</label>
+                            <input type="text" class="form-control" id="localizacao" placeholder="Digite um endereco, cidade ou CEP">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tipo-local" class="form-label">Tipo de Local</label>
+                            <select class="form-select" id="tipo-local">
+                                <option value="todos" selected>Todos os tipos</option>
+                                <option value="restaurante">Restaurante</option>
+                                <option value="shopping">Shopping</option>
+                                <option value="parque">Parque</option>
+                                <option value="hotel">Hotel</option>
+                                <option value="cinema">Teatro/Cinema</option>
+                                <option value="supermercado">Supermercado</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Tipos de Acessibilidade</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="mobilidade">
+                                    <label class="form-check-label" for="mobilidade">Mobilidade (rampas, elevadores, etc.)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="visual">
+                                    <label class="form-check-label" for="visual">Visual (piso tatil, braile, etc.)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="auditiva">
+                                    <label class="form-check-label" for="auditiva">Auditiva (interpretes, legendas, etc.)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="intelectual">
+                                    <label class="form-check-label" for="intelectual">Intelectual (comunicacao simplificada)</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 d-flex gap-2">
+                            <button class="btn btn-success" type="submit"><i class="fas fa-search me-2"></i>Buscar</button>
+                            <button class="btn btn-outline-secondary" type="reset" id="limparFiltros">Limpar filtros</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="row gy-4">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h2 class="h5 mb-0">Resultados encontrados</h2>
+                                <div id="resultsLoading" class="spinner-border spinner-border-sm text-success d-none" role="status" aria-hidden="true"></div>
+                            </div>
+                            <div id="resultsEmpty" class="alert alert-info d-none" role="status">
+                                Nenhum local encontrado com os filtros atuais.
+                            </div>
+                            <div class="list-group" id="resultsList" aria-live="polite"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2025 Livre Acesso. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/maps.js"></script>
+</body>
+</html>
