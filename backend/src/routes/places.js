@@ -19,6 +19,7 @@ const FEATURE_LABELS = {
   wheelchair_available: 'Cadeira de rodas disponivel',
   accessible_parking: 'Estacionamento acessivel'
 };
+const FEATURE_KEYS = Object.keys(FEATURE_LABELS);
 
 function average(values = []) {
   if (!values.length) return null;
@@ -66,6 +67,7 @@ function basePlaceResponse(place, currentUserId) {
     name: place.name,
     type: place.type,
     address: place.address,
+    accessibilityFlags: place.accessibilityFlags || null,
     phone: place.phone,
     website: place.website,
     description: place.description,
@@ -135,6 +137,11 @@ router.post('/', optionalAuth, async (req, res) => {
       }
     }));
 
+    const accessibilityFlags = FEATURE_KEYS.reduce((acc, key) => {
+      acc[key] = featureKeys.includes(key);
+      return acc;
+    }, {});
+
     const photoData = photoItems
       .map((item) => {
         if (!item) return null;
@@ -153,6 +160,7 @@ router.post('/', optionalAuth, async (req, res) => {
       website: site ?? null,
       lat: toFloat(lat),
       lng: toFloat(lng),
+      accessibilityFlags,
       ownerId: req.user?.id ?? null
     };
 

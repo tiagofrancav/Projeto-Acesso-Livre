@@ -60,12 +60,14 @@ cp .env.example .env
 # ajuste DATABASE_URL, PORT e JWT_SECRET se necessário
 
 # 5. Prisma
+```bash
 npx prisma migrate dev
+# (opcional) especifique --name ao criar a primeira migration
 npx prisma generate
+```
 
 # 6. Inicie a API
 npm run dev
-```
 
 A API ficará acessível em `http://localhost:3000`. Certifique-se de apontar `public/assets/js/config.js` para o mesmo endereço (`apiBaseUrl`).
 
@@ -104,7 +106,7 @@ Arquivo-chave: `public/assets/js/maps.js`.
 
 ## ✅ Roadmap / pendências
 
-- [ ] Persistir as seleções completas de acessibilidade (checkboxes) no backend
+- [x] Persistir as seleções completas de acessibilidade (checkboxes) no backend
 - [ ] Implementar reviews e favoritos (APIs + UI)
 - [ ] Melhorar UX (mensagens de erro, loading states, tratamento de token expirado)
 - [ ] Geocodificar endereço → latitude/longitude automaticamente ao cadastrar local
@@ -129,3 +131,6 @@ Defina aqui a licença desejada (MIT, Apache, GPL...). Enquanto isso, considere 
 ---
 
 Feito com ☕ e propósito por quem acredita em cidades mais inclusivas. Lace o tênis e vamos abrir caminhos juntos! 💚
+
+
+

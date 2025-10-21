@@ -25,6 +25,7 @@ model Place {
   name        String
   type        String
   address     String
+  accessibilityFlags Json?
   phone       String?
   website     String?
   lat         Float?

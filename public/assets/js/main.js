@@ -243,10 +243,17 @@
 
   function renderFeatureBadges(container, features = [], options = {}) {
     if (!container) return;
-    const { showEmpty = true, limit } = options;
+    const { showEmpty = true, limit, flags = null } = options;
     container.innerHTML = '';
 
-    if (!features.length) {
+    let items = Array.isArray(features) ? features : [];
+    if ((!items || !items.length) && flags && typeof flags === 'object') {
+      items = Object.entries(flags)
+        .filter(([, value]) => Boolean(value))
+        .map(([key]) => ({ key, label: FEATURE_LABELS[key] || key }));
+    }
+
+    if (!items.length) {
       if (showEmpty) {
         const info = document.createElement('span');
         info.className = 'text-muted';
@@ -256,11 +263,9 @@
       return;
     }
 
-    const items = Array.isArray(features)
-      ? (Number.isFinite(limit) && limit > 0 ? features.slice(0, limit) : features)
-      : [];
+    const list = Number.isFinite(limit) && limit > 0 ? items.slice(0, limit) : items;
 
-    items.forEach((feature) => {
+    list.forEach((feature) => {
       const badge = document.createElement('span');
       badge.className = 'badge bg-success me-1 mb-1';
       badge.textContent = feature.label || FEATURE_LABELS[feature.key] || feature.key;
@@ -576,7 +581,7 @@
       }
 
         const featureWrap = document.createElement('div');
-        renderFeatureBadges(featureWrap, place.features || [], { showEmpty: false, limit: 3 });
+        renderFeatureBadges(featureWrap, place.features || [], { showEmpty: false, limit: 3, flags: place.accessibilityFlags });
         link.appendChild(featureWrap);
 
         list.appendChild(link);
@@ -642,7 +647,7 @@
       }
 
       const features = document.createElement('div');
-      renderFeatureBadges(features, place.features || [], { showEmpty: false, limit: 3 });
+      renderFeatureBadges(features, place.features || [], { showEmpty: false, limit: 3, flags: place.accessibilityFlags });
       body.appendChild(features);
 
       const footer = document.createElement('div');
@@ -864,7 +869,7 @@
         }
       }
 
-      renderFeatureBadges(document.getElementById('placeFeatureList'), place.features || []);
+      renderFeatureBadges(document.getElementById('placeFeatureList'), place.features || [], { flags: place.accessibilityFlags });
       renderPlacePhotos(place);
       renderPlaceReviews(place);
     } catch (err) {
@@ -995,7 +1000,7 @@
       body.appendChild(address);
     }
 
-    renderFeatureBadges(body.appendChild(document.createElement('div')), entry.features || []);
+    renderFeatureBadges(body.appendChild(document.createElement('div')), entry.features || [], { flags: entry.accessibilityFlags });
 
     const stats = document.createElement('div');
     stats.className = 'small text-muted mt-2';
@@ -1017,7 +1022,7 @@
     title.className = 'mb-2';
     title.textContent = favorite.place.name;
     body.appendChild(title);
-    renderFeatureBadges(body.appendChild(document.createElement('div')), favorite.place.features || []);
+    renderFeatureBadges(body.appendChild(document.createElement('div')), favorite.place.features || [], { flags: favorite.place.accessibilityFlags });
     const meta = document.createElement('small');
     meta.className = 'text-muted';
     meta.textContent = `Adicionado em ${formatDate(favorite.addedAt)}`;
@@ -1130,3 +1135,5 @@
 }
 
 })();
+
+
