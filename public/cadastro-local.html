@@ -91,10 +91,20 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="endereco" class="form-label">EndereÃ§o*</label>
+                                    <label for="endereco" class="form-label">Endereço*</label>
                                     <input type="text" class="form-control" id="endereco" required>
-                                    <div id="map" data-map="true" data-center-lat="-2.525730" data-center-lng="-44.271690" data-zoom="13" data-marker="true"></div>
-                                    <small class="text-muted">O mapa serÃ¡ atualizado automaticamente quando vocÃª digitar o endereÃ§o.</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Localização no mapa*</label>
+                                    <p class="form-text">Clique no mapa para marcar o ponto exato do estabelecimento.</p>
+                                    <div id="map" data-map="true" data-map-mode="picker" data-center-lat="-2.525730" data-center-lng="-44.271690" data-zoom="13" data-marker="false"></div>
+                                    <input type="hidden" id="latitude" name="latitude">
+                                    <input type="hidden" id="longitude" name="longitude">
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                                        <button type="button" class="btn btn-outline-success btn-sm" id="useCurrentLocation">Usar minha localização</button>
+                                        <small class="form-text text-muted mb-0" id="mapSelectedCoords">Nenhum ponto selecionado.</small>
+                                    </div>
                                 </div>
 
                                 <div class="row">

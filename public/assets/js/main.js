@@ -496,6 +496,15 @@
     const preview = document.getElementById('imagePreviewContainer');
     const successActions = document.getElementById('cadastroLocalSuccessActions');
     const submitButton = form.querySelector('button[type="submit"]');
+    const mapEl = document.getElementById('map');
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    const coordsHint = document.getElementById('mapSelectedCoords');
+    const locationButton = document.getElementById('useCurrentLocation');
+    const locationButtonDefaultLabel = locationButton?.textContent?.trim() || 'Usar minha localizacao';
+    let selectedLat = null;
+    let selectedLng = null;
+    let isRequestingLocation = false;
     const photoState = [];
     const MAX_PHOTOS = 5;
     const token = getToken();
@@ -510,6 +519,185 @@
       }, 1500);
       return;
     }
+
+    const updateCoordsHint = () => {
+      if (!coordsHint) return;
+      if (Number.isFinite(selectedLat) && Number.isFinite(selectedLng)) {
+        coordsHint.textContent = `Latitude: ${selectedLat.toFixed(5)}, Longitude: ${selectedLng.toFixed(5)}`;
+        coordsHint.classList.remove('text-muted');
+      } else {
+        coordsHint.textContent = 'Nenhum ponto selecionado.';
+        if (!coordsHint.classList.contains('text-muted')) {
+          coordsHint.classList.add('text-muted');
+        }
+      }
+    };
+
+    const setLocationButtonLoading = (loading) => {
+      if (!locationButton) return;
+      locationButton.disabled = loading;
+      locationButton.textContent = loading ? 'Buscando localizacao...' : locationButtonDefaultLabel;
+    };
+
+    const handleGeolocationError = (error, options = {}) => {
+      if (options.silent) return;
+      let message = 'Nao foi possivel acessar sua localizacao.';
+      if (error?.code === 1) {
+        message = 'Permita o acesso a localizacao do navegador para marcar automaticamente o endereco.';
+      } else if (error?.code === 2) {
+        message = 'Nao foi possivel determinar sua localizacao. Tente novamente.';
+      } else if (error?.code === 3) {
+        message = 'A busca pela localizacao expirou. Tente novamente.';
+      } else if (typeof error?.message === 'string' && error.message.trim()) {
+        message = error.message;
+      }
+      showAlert(form, 'warning', message);
+    };
+
+    const resetMapSelection = (options = {}) => {
+      selectedLat = null;
+      selectedLng = null;
+      if (latInput) latInput.value = '';
+      if (lngInput) lngInput.value = '';
+      if (mapEl) {
+        mapEl.dataset.marker = 'false';
+      }
+      setLocationButtonLoading(false);
+      updateCoordsHint();
+      if (mapEl?._leafletMap && mapEl._leafletMarker) {
+        mapEl._leafletMap.removeLayer(mapEl._leafletMarker);
+        mapEl._leafletMarker = null;
+      }
+      if (mapEl?._leafletMap && options.recenter !== false) {
+        const centerLat = Number(mapEl.dataset.centerLat);
+        const centerLng = Number(mapEl.dataset.centerLng);
+        const zoom = Number.parseInt(mapEl.dataset.zoom || '13', 10);
+        if (Number.isFinite(centerLat) && Number.isFinite(centerLng)) {
+          mapEl._leafletMap.setView([centerLat, centerLng], Number.isFinite(zoom) ? zoom : mapEl._leafletMap.getZoom());
+        }
+      }
+    };
+
+    const setSelectedCoords = (lat, lng, options = {}) => {
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        resetMapSelection({ recenter: options.recenter });
+        return;
+      }
+      selectedLat = lat;
+      selectedLng = lng;
+      if (latInput) latInput.value = selectedLat.toFixed(6);
+      if (lngInput) lngInput.value = selectedLng.toFixed(6);
+      if (mapEl) {
+        mapEl.dataset.marker = 'true';
+        if (window.Maps?.setMarker) {
+          window.Maps.setMarker(mapEl, selectedLat, selectedLng, {
+            pan: options.pan ?? false,
+            invalidate: options.invalidate ?? true
+          });
+        } else if (mapEl._leafletMap && window.L) {
+          if (!mapEl._leafletMarker) {
+            mapEl._leafletMarker = window.L.marker([selectedLat, selectedLng]).addTo(mapEl._leafletMap);
+          } else {
+            mapEl._leafletMarker.setLatLng([selectedLat, selectedLng]);
+          }
+          if (options.pan !== false) {
+            mapEl._leafletMap.setView([selectedLat, selectedLng]);
+          }
+        }
+      }
+      updateCoordsHint();
+    };
+
+    const requestCurrentLocation = (options = {}) => {
+      if (!navigator.geolocation) {
+        if (!options.silent) {
+          showAlert(form, 'warning', 'Geolocalizacao nao suportada neste navegador.');
+        }
+        return;
+      }
+      if (isRequestingLocation) {
+        return;
+      }
+      isRequestingLocation = true;
+      if (!options.silent) {
+        setLocationButtonLoading(true);
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          isRequestingLocation = false;
+          if (!options.silent) {
+            setLocationButtonLoading(false);
+          }
+          const { latitude, longitude } = position.coords || {};
+          if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+            setSelectedCoords(latitude, longitude, { pan: options.pan ?? true, invalidate: true });
+          } else if (!options.silent) {
+            showAlert(form, 'warning', 'Localizacao valida nao encontrada.');
+          }
+        },
+        (error) => {
+          isRequestingLocation = false;
+          if (!options.silent) {
+            setLocationButtonLoading(false);
+          }
+          console.warn('[cadastro-local] geolocation erro', error);
+          handleGeolocationError(error, options);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 30000
+        }
+      );
+    };
+
+    if (mapEl) {
+      try {
+        window.Maps?.initElement?.(mapEl);
+        if (mapEl._leafletMap) {
+          mapEl._leafletMap.on('click', (event) => {
+            const { lat, lng } = event.latlng || {};
+            setSelectedCoords(lat, lng, { pan: false });
+          });
+        } else {
+          console.warn('[cadastro-local] mapa nao inicializado');
+        }
+      } catch (err) {
+        console.warn('[cadastro-local] falha ao iniciar mapa', err);
+      }
+    }
+
+    if (locationButton) {
+      locationButton.textContent = locationButtonDefaultLabel;
+      if (!navigator.geolocation) {
+        locationButton.classList.add('d-none');
+      } else if (locationButton.dataset.bound !== 'true') {
+        locationButton.dataset.bound = 'true';
+        locationButton.classList.remove('d-none');
+        locationButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          requestCurrentLocation({ pan: true });
+        });
+      }
+    }
+
+    if (navigator.geolocation && navigator.permissions?.query) {
+      navigator.permissions
+        .query({ name: 'geolocation' })
+        .then((status) => {
+          if (status.state === 'granted' && !Number.isFinite(selectedLat) && !Number.isFinite(selectedLng)) {
+            requestCurrentLocation({ silent: true, pan: true });
+          }
+          status.onchange = () => {
+            if (status.state === 'granted') {
+              requestCurrentLocation({ silent: true, pan: true });
+            }
+          };
+        })
+        .catch(() => {});
+    }
+
+    updateCoordsHint();
 
     if (inputFotos && preview) {
       inputFotos.addEventListener('change', () => {
@@ -548,6 +736,8 @@
       const telefone = document.getElementById('telefone')?.value.trim() || '';
       const site = document.getElementById('site')?.value.trim() || '';
       const descricao = document.getElementById('descricao')?.value.trim() || '';
+      const latValue = Number.parseFloat(latInput?.value ?? '');
+      const lngValue = Number.parseFloat(lngInput?.value ?? '');
 
       if (successActions) {
         successActions.classList.add('d-none');
@@ -564,6 +754,11 @@
         return;
       }
 
+      if (!Number.isFinite(latValue) || !Number.isFinite(lngValue)) {
+        showAlert(form, 'warning', 'Clique no mapa para marcar a localizacao do estabelecimento.');
+        return;
+      }
+
       submitButton?.setAttribute('disabled', 'disabled');
 
       try {
@@ -574,6 +769,8 @@
           telefone: telefone || null,
           site: site || null,
           descricao,
+          lat: latValue,
+          lng: lngValue,
           features: gatherFeatureSelections(),
           fotos: photoState.map(({ dataUrl, name }) => ({ dataUrl, name }))
         };
@@ -587,6 +784,7 @@
           preview.innerHTML = '';
         }
         photoState.splice(0, photoState.length);
+        resetMapSelection();
 
         showAlert(form, 'success', 'Local cadastrado com sucesso!');
 
@@ -1146,6 +1344,7 @@
           mapUnavailable?.classList.add('d-none');
           if (window.Maps?.initElement) {
             window.Maps.initElement(mapEl);
+            window.Maps.setMarker?.(mapEl, Number(place.lat), Number(place.lng), { pan: true });
             setTimeout(() => {
               if (mapEl._leafletMap?.invalidateSize) {
                 mapEl._leafletMap.invalidateSize();

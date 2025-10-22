@@ -15,18 +15,22 @@
     }
     const { lat, lng } = parseLatLng(el);
     const zoom = parseInt(el.getAttribute('data-zoom') || '13', 10);
-    const map = window.L.map(el, { scrollWheelZoom: false }).setView([lat, lng], Number.isFinite(zoom) ? zoom : 13);
+    const map = window.L
+      .map(el, { scrollWheelZoom: false })
+      .setView([lat, lng], Number.isFinite(zoom) ? zoom : 13);
 
     window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    let marker = null;
     if (el.getAttribute('data-marker') === 'true') {
-      window.L.marker([lat, lng]).addTo(map);
+      marker = window.L.marker([lat, lng]).addTo(map);
     }
 
     el.dataset.leafletInitialized = 'true';
     el._leafletMap = map;
+    el._leafletMarker = marker;
   }
 
   function initAll() {
@@ -49,6 +53,24 @@
 
   window.Maps = {
     initAll,
-    initElement
+    initElement,
+    setMarker(el, lat, lng, options = {}) {
+      if (!el?._leafletMap || !window.L || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return null;
+      }
+      const map = el._leafletMap;
+      if (!el._leafletMarker) {
+        el._leafletMarker = window.L.marker([lat, lng]).addTo(map);
+      } else {
+        el._leafletMarker.setLatLng([lat, lng]);
+      }
+      if (options.pan !== false) {
+        map.setView([lat, lng], options.zoom ?? map.getZoom());
+      }
+      if (options.invalidate !== false && typeof map.invalidateSize === 'function') {
+        setTimeout(() => map.invalidateSize(), 0);
+      }
+      return el._leafletMarker;
+    }
   };
 })();
