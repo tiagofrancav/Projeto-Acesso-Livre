@@ -1,11 +1,11 @@
-[data-map="true"] {
+[data-map] {
   min-height: 280px;
   width: 100%;
   border-radius: 0.5rem;
   overflow: hidden;
 }
 
-[data-map="true"] .leaflet-container {
+[data-map] .leaflet-container {
   width: 100%;
   height: 100%;
 }

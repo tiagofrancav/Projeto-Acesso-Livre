@@ -41,7 +41,11 @@
     elements.forEach(initElement);
   }
 
-  document.addEventListener('DOMContentLoaded', initAll);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else {
+    initAll();
+  }
 
   window.Maps = {
     initAll,

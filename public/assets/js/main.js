@@ -357,9 +357,8 @@
     if (!text) return '';
     const value = String(text).trim();
     if (value.length <= maxLength) return value;
-    return `${value.slice(0, maxLength).trim()}…`;
+    return `${value.slice(0, maxLength).trim()}...`;
   }
-
   function initLogin() {
     const form = document.getElementById('loginForm');
     if (!form) return;
@@ -591,20 +590,23 @@
 
         showAlert(form, 'success', 'Local cadastrado com sucesso!');
 
-        const targetUrl = place?.id ? `local-detalhes.html?id=${place.id}` : 'local-detalhes.html';
+        if (place?.id) {
+          window.sessionStorage.setItem('acesso-livre.lastPlaceId', String(place.id));
+          window.location.href = `local-detalhes.html?id=${place.id}`;
+          return;
+        }
+
         if (successActions) {
           successActions.classList.remove('d-none');
           successActions.innerHTML = '';
           const viewButton = document.createElement('a');
           viewButton.className = 'btn btn-outline-success';
-          viewButton.href = targetUrl;
+          viewButton.href = 'local-detalhes.html';
           viewButton.textContent = 'Ver detalhes';
           successActions.appendChild(viewButton);
+        } else {
+          window.location.href = 'local-detalhes.html';
         }
-
-        setTimeout(() => {
-          window.location.href = targetUrl;
-        }, 2000);
       } catch (err) {
         if (err.status === 401) {
           clearSession();
@@ -730,7 +732,7 @@
       } else {
         const placeholder = document.createElement('div');
         placeholder.className = 'ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center text-muted';
-        placeholder.textContent = 'Sem foto disponível';
+        placeholder.textContent = 'Sem foto disponivel';
         card.appendChild(placeholder);
       }
 
@@ -1068,7 +1070,7 @@
         form.reset();
         if (feedback) {
           feedback.className = 'small mt-2 text-success';
-          feedback.textContent = 'Obrigado! Sua avaliação foi registrada.';
+          feedback.textContent = 'Obrigado! Sua avaliacao foi registrada.';
         }
         onSuccess?.(review);
       } catch (err) {
@@ -1080,7 +1082,7 @@
         console.error('[reviews] erro ao criar', err);
         if (feedback) {
           feedback.className = 'small mt-2 text-danger';
-          feedback.textContent = err.data?.error || 'Não foi possível enviar a avaliação.';
+          feedback.textContent = err.data?.error || 'Nao foi possivel enviar a avaliacao.';
         }
       } finally {
         submitBtn?.removeAttribute('disabled');
@@ -1092,7 +1094,14 @@
     const detailRoot = document.getElementById('placeDetailRoot');
     if (!detailRoot) return;
     const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
+    let id = params.get('id');
+    if (!id) {
+      const storedId = window.sessionStorage.getItem('acesso-livre.lastPlaceId');
+      if (storedId) {
+        id = storedId;
+        window.sessionStorage.removeItem('acesso-livre.lastPlaceId');
+      }
+    }
     const loading = document.getElementById('placeLoading');
     const favoriteButton = document.getElementById('favoriteToggle');
     const favoriteHint = document.getElementById('favoriteHint');
@@ -1124,7 +1133,36 @@
         }
       }
 
+      const mapEl = document.getElementById('placeMap');
+      const mapUnavailable = document.getElementById('placeMapUnavailable');
+      if (mapEl) {
+        const hasCoords = Number.isFinite(place.lat) && Number.isFinite(place.lng);
+        if (hasCoords) {
+          mapEl.dataset.centerLat = String(place.lat);
+          mapEl.dataset.centerLng = String(place.lng);
+          mapEl.dataset.marker = 'true';
+          mapEl.setAttribute('data-map', 'true');
+          mapEl.classList.remove('d-none');
+          mapUnavailable?.classList.add('d-none');
+          if (window.Maps?.initElement) {
+            window.Maps.initElement(mapEl);
+            setTimeout(() => {
+              if (mapEl._leafletMap?.invalidateSize) {
+                mapEl._leafletMap.invalidateSize();
+              }
+            }, 0);
+          }
+        } else {
+          mapEl.classList.add('d-none');
+          if (mapUnavailable) {
+            mapUnavailable.classList.remove('d-none');
+          }
+          mapEl.removeAttribute('data-map');
+        }
+      }
+
       renderFeatureBadges(document.getElementById('placeFeatureList'), place.features || [], { flags: place.accessibilityFlags });
+      window.sessionStorage.removeItem('acesso-livre.lastPlaceId');
       renderPlacePhotos(place);
       setupFavoriteButton(favoriteButton, favoriteHint, id, place.isFavorite);
 
@@ -1155,6 +1193,7 @@
       const isNotFound = err.status === 404;
       const message = err.data?.error || (isNotFound ? 'Local nao encontrado.' : 'Erro ao carregar dados do local.');
       showAlert(detailRoot, isNotFound ? 'warning' : 'danger', message);
+      window.sessionStorage.removeItem('acesso-livre.lastPlaceId');
       if (isNotFound) {
         document.getElementById('placeTitle')?.replaceChildren(document.createTextNode('Local nao encontrado'));
         document.getElementById('placeDescription')?.replaceChildren(document.createTextNode(''));
