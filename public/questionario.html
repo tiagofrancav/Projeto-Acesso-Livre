@@ -25,10 +25,21 @@
           <li class="nav-item"><a class="nav-link" href="cadastro-local.html">Cadastrar Local</a></li>
           <li class="nav-item"><a class="nav-link" href="questionario.html">Avaliar Plataforma</a></li>
         </ul>
-        <ul class="navbar-nav">
-          <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
-          <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
-        </ul>
+                        <ul class="navbar-nav" data-auth="guest">
+                    <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
+                </ul>
+                <ul class="navbar-nav d-none align-items-lg-center gap-2" data-auth="auth">
+                    <li class="nav-item">
+                        <span class="nav-link fw-semibold" id="navbarUserName"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="perfil.html">Minha conta</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-action="logout">Sair</a>
+                    </li>
+                </ul>
       </div>
     </div>
   </nav>
@@ -186,3 +197,4 @@
   <script src="assets/js/main.js"></script>
 </body>
 </html>
+

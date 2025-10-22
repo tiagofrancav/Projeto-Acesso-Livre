@@ -19,6 +19,7 @@ logs/
 
 # Docker volumes
 db-data/
+uploads/
 
 # OS / editor cruft
 .DS_Store

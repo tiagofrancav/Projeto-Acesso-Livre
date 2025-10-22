@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!-- public build -->
 <html lang="pt-BR">
 <head>
@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <!-- Barra de Navegação -->
+    <!-- Barra de NavegaÃ§Ã£o -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container">
             <a class="navbar-brand" href="index.html">
@@ -25,7 +25,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">Início</a>
+                        <a class="nav-link" href="index.html">InÃ­cio</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="pesquisa.html">Buscar Locais</a>
@@ -34,19 +34,26 @@
                         <a class="nav-link" href="cadastro-local.html">Cadastrar Local</a>
                     </li>
                 </ul>
-                <ul class="navbar-nav">
+                                <ul class="navbar-nav" data-auth="guest">
+                    <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
+                </ul>
+                <ul class="navbar-nav d-none align-items-lg-center gap-2" data-auth="auth">
                     <li class="nav-item">
-                        <a class="nav-link" href="login.html">Login</a>
+                        <span class="nav-link fw-semibold" id="navbarUserName"></span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a>
+                        <a class="nav-link" href="perfil.html">Minha conta</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-action="logout">Sair</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Seção de Confirmação -->
+    <!-- SeÃ§Ã£o de ConfirmaÃ§Ã£o -->
     <section class="confirmation-section py-5">
         <div class="container">
             <div class="row justify-content-center">
@@ -57,7 +64,7 @@
                                 <i class="fas fa-check-circle"></i>
                             </div>
                             <h2 class="mb-3 page-title">Senha Redefinida com Sucesso!</h2>
-                            <p class="mb-4">Sua senha foi atualizada com sucesso. Agora você pode fazer login com sua nova senha.</p>
+                            <p class="mb-4">Sua senha foi atualizada com sucesso. Agora vocÃª pode fazer login com sua nova senha.</p>
                             <a href="login.html" class="btn btn-success px-4">Ir para Login</a>
                         </div>
                     </div>
@@ -66,7 +73,7 @@
         </div>
     </section>
 
-    <!-- Rodapé -->
+    <!-- RodapÃ© -->
     <footer class="bg-dark text-white py-4">
         <div class="container text-center">
             <p class="mb-0">&copy; 2025 Livre Acesso. Todos os direitos reservados.</p>

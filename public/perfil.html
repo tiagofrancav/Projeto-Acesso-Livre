@@ -24,7 +24,11 @@
                     <li class="nav-item"><a class="nav-link" href="cadastro-local.html">Cadastrar Local</a></li>
                     <li class="nav-item"><a class="nav-link" href="questionario.html">Avaliar Plataforma</a></li>
                 </ul>
-                <ul class="navbar-nav">
+                <ul class="navbar-nav" data-auth="guest">
+                    <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
+                </ul>
+                <ul class="navbar-nav d-none" data-auth="auth">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user-circle me-1"></i> <span id="navbarUserName">Perfil</span>

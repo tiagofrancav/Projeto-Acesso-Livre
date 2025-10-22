@@ -1,11 +1,28 @@
 import express from 'express';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 import { prisma } from '../lib/prisma.js';
-import { optionalAuth } from '../middleware/auth.js';
+import { optionalAuth, requireAuth } from '../middleware/auth.js';
 
 import favoritesRouter from './favorites.js';
 import reviewsRouter from './reviews.js';
 
 const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const UPLOADS_ROOT = path.resolve(__dirname, '../../uploads');
+const PLACE_UPLOAD_DIR = path.join(UPLOADS_ROOT, 'places');
+const DATA_URL_REGEX = /^data:(?<mime>[^;]+);base64,(?<data>.+)$/i;
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp'
+]);
+const MAX_PHOTOS = 5;
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 const FEATURE_LABELS = {
   ramp_access: 'Rampa de acesso',
@@ -23,6 +40,82 @@ const FEATURE_LABELS = {
   accessible_parking: 'Estacionamento acessivel'
 };
 const FEATURE_KEYS = Object.keys(FEATURE_LABELS);
+
+function mimeToExtension(mime) {
+  switch (mime) {
+    case 'image/jpeg':
+      return 'jpg';
+    case 'image/png':
+      return 'png';
+    case 'image/gif':
+      return 'gif';
+    case 'image/webp':
+      return 'webp';
+    default:
+      return null;
+  }
+}
+
+async function ensurePlaceUploadDir() {
+  await fs.mkdir(PLACE_UPLOAD_DIR, { recursive: true });
+}
+
+async function savePhotoFromPayload(item) {
+  if (!item) {
+    throw new Error('missing_photo');
+  }
+  let dataUrl = null;
+
+  if (typeof item === 'string') {
+    dataUrl = item;
+  } else if (typeof item === 'object') {
+    dataUrl = item.dataUrl || item.base64 || item.url || null;
+  }
+
+  if (!dataUrl) {
+    throw new Error('missing_photo_data');
+  }
+
+  const match = DATA_URL_REGEX.exec(dataUrl);
+  if (!match || !match.groups) {
+    throw new Error('invalid_data_url');
+  }
+
+  const { mime, data } = match.groups;
+  const normalizedMime = mime?.toLowerCase();
+
+  if (!normalizedMime || !ALLOWED_MIME_TYPES.has(normalizedMime)) {
+    throw new Error('unsupported_mime');
+  }
+
+  const buffer = Buffer.from((data || '').replace(/\s/g, ''), 'base64');
+  if (!buffer.length) {
+    throw new Error('empty_photo');
+  }
+  if (buffer.length > MAX_PHOTO_BYTES) {
+    throw new Error('photo_too_large');
+  }
+
+  await ensurePlaceUploadDir();
+
+  const extension = mimeToExtension(normalizedMime) || 'bin';
+  const filename = `${Date.now()}-${randomUUID()}.${extension}`;
+  const filePath = path.join(PLACE_UPLOAD_DIR, filename);
+  await fs.writeFile(filePath, buffer);
+  return `/uploads/places/${filename}`;
+}
+
+async function buildPhotoData(photoItems = []) {
+  const limited = photoItems.filter(Boolean).slice(0, MAX_PHOTOS);
+  const result = [];
+
+  for (const item of limited) {
+    const url = await savePhotoFromPayload(item);
+    result.push({ url });
+  }
+
+  return result;
+}
 
 function average(values = []) {
   if (!values.length) return null;
@@ -109,7 +202,7 @@ function detailPlaceResponse(place, currentUserId) {
   };
 }
 
-router.post('/', optionalAuth, async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
     const {
       nome,
@@ -124,12 +217,35 @@ router.post('/', optionalAuth, async (req, res) => {
       fotos: rawPhotos
     } = req.body || {};
 
-    if (!nome || !tipo || !endereco) {
-      return res.status(400).json({ error: 'Nome, tipo e endereco sao obrigatorios.' });
+    const name = typeof nome === 'string' ? nome.trim() : '';
+    const type = typeof tipo === 'string' ? tipo.trim() : '';
+    const address = typeof endereco === 'string' ? endereco.trim() : '';
+    const description = typeof descricao === 'string' ? descricao.trim() : '';
+
+    if (!name || !type || !address || !description) {
+      return res.status(400).json({ error: 'Nome, tipo, endereco e descricao sao obrigatorios.' });
     }
 
     const featureKeys = parseFeatureKeys(rawFeatures);
     const photoItems = Array.isArray(rawPhotos) ? rawPhotos : [];
+
+    if (!photoItems.length) {
+      return res.status(400).json({ error: 'Informe ao menos uma foto do local.' });
+    }
+
+    let photoData;
+    try {
+      photoData = await buildPhotoData(photoItems);
+    } catch (error) {
+      console.error('[places] erro ao processar fotos', error);
+      return res.status(400).json({
+        error: 'Falha ao processar as fotos. Envie imagens JPG, PNG, GIF ou WEBP de ate 5MB.'
+      });
+    }
+
+    if (!photoData.length) {
+      return res.status(400).json({ error: 'Nao foi possivel salvar as fotos do local.' });
+    }
 
     const featureData = featureKeys.map((key) => ({
       feature: {
@@ -145,34 +261,23 @@ router.post('/', optionalAuth, async (req, res) => {
       return acc;
     }, {});
 
-    const photoData = photoItems
-      .map((item) => {
-        if (!item) return null;
-        if (typeof item === 'string') return { url: item };
-        const url = item.url || item.dataUrl || item.base64;
-        return url ? { url } : null;
-      })
-      .filter(Boolean);
-
     const data = {
-      name: nome,
-      type: tipo,
-      address: endereco,
-      description: descricao ?? null,
-      phone: telefone ?? null,
-      website: site ?? null,
+      name,
+      type,
+      address,
+      description,
+      phone: typeof telefone === 'string' && telefone.trim() ? telefone.trim() : null,
+      website: typeof site === 'string' && site.trim() ? site.trim() : null,
       lat: toFloat(lat),
       lng: toFloat(lng),
       accessibilityFlags,
-      ownerId: req.user?.id ?? null
+      ownerId: req.user.id
     };
 
     if (featureData.length) {
       data.features = { create: featureData };
     }
-    if (photoData.length) {
-      data.photos = { create: photoData };
-    }
+    data.photos = { create: photoData };
 
     const place = await prisma.place.create({
       data,
@@ -180,9 +285,7 @@ router.post('/', optionalAuth, async (req, res) => {
         features: { include: { feature: true } },
         photos: true,
         reviews: true,
-        favorites: req.user?.id
-          ? { where: { userId: req.user.id }, select: { userId: true } }
-          : undefined,
+        favorites: { where: { userId: req.user.id }, select: { userId: true } },
         _count: { select: { reviews: true, favorites: true } }
       }
     });

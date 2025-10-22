@@ -93,6 +93,61 @@
     window.localStorage.removeItem(STORAGE_KEYS.user);
   }
 
+  function applySessionToNav(user) {
+    const hasUser = Boolean(user && (user.name || user.email));
+    document.querySelectorAll('[data-auth="guest"]').forEach((element) => {
+      element.classList.toggle('d-none', hasUser);
+    });
+    document.querySelectorAll('[data-auth="auth"]').forEach((element) => {
+      element.classList.toggle('d-none', !hasUser);
+    });
+    const nameTarget = document.getElementById('navbarUserName');
+    if (nameTarget) {
+      nameTarget.textContent = hasUser
+        ? ([user.name, user.surname].filter(Boolean).join(' ') || user.email || '')
+        : '';
+    }
+  }
+
+  function bindLogoutHandlers() {
+    document.querySelectorAll('[data-action="logout"]').forEach((link) => {
+      if (link.dataset.boundLogout === 'true') return;
+      link.dataset.boundLogout = 'true';
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        clearSession();
+        applySessionToNav(null);
+        window.location.href = 'index.html';
+      });
+    });
+  }
+
+  async function bootstrapSession() {
+    bindLogoutHandlers();
+    const token = getToken();
+    let user = getStoredUser();
+    applySessionToNav(user);
+
+    if (!token) {
+      return null;
+    }
+
+    if (!user) {
+      try {
+        user = await apiRequest(ENDPOINTS.me);
+        setSession(token, user);
+      } catch (err) {
+        console.error('[session] erro ao atualizar usuario', err);
+        clearSession();
+        applySessionToNav(null);
+        return null;
+      }
+    }
+
+    applySessionToNav(user);
+    return user;
+  }
+
   async function apiRequest(path, options = {}) {
     const {
       method = 'GET',
@@ -440,15 +495,33 @@
     if (!form) return;
     const inputFotos = document.getElementById('fotos');
     const preview = document.getElementById('imagePreviewContainer');
+    const successActions = document.getElementById('cadastroLocalSuccessActions');
+    const submitButton = form.querySelector('button[type="submit"]');
     const photoState = [];
     const MAX_PHOTOS = 5;
+    const token = getToken();
+
+    if (!token) {
+      showAlert(form, 'warning', 'E necessario estar logado para cadastrar um local.');
+      form.querySelectorAll('input, select, textarea, button').forEach((element) => {
+        element.setAttribute('disabled', 'disabled');
+      });
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 1500);
+      return;
+    }
 
     if (inputFotos && preview) {
       inputFotos.addEventListener('change', () => {
         const files = Array.from(inputFotos.files || []);
-        for (const file of files) {
+        const imageFiles = files.filter((file) => file && file.type && file.type.startsWith('image/'));
+        if (!imageFiles.length && files.length) {
+          showAlert(form, 'warning', 'Envie apenas arquivos de imagem.');
+        }
+        for (const file of imageFiles) {
           if (photoState.length >= MAX_PHOTOS) {
-            alert('Maximo de 5 fotos permitidas.');
+            showAlert(form, 'warning', `Limite de ${MAX_PHOTOS} fotos atingido.`);
             break;
           }
           const reader = new FileReader();
@@ -477,10 +550,22 @@
       const site = document.getElementById('site')?.value.trim() || '';
       const descricao = document.getElementById('descricao')?.value.trim() || '';
 
+      if (successActions) {
+        successActions.classList.add('d-none');
+        successActions.innerHTML = '';
+      }
+
       if (!nome || !tipo || !endereco || !descricao) {
         showAlert(form, 'warning', 'Preencha os campos obrigatorios.');
         return;
       }
+
+      if (!photoState.length) {
+        showAlert(form, 'warning', 'E necessario anexar uma foto do local para concluir o cadastro.');
+        return;
+      }
+
+      submitButton?.setAttribute('disabled', 'disabled');
 
       try {
         const payload = {
@@ -497,15 +582,40 @@
           method: 'POST',
           body: payload
         });
+
+        form.reset();
+        if (preview) {
+          preview.innerHTML = '';
+        }
+        photoState.splice(0, photoState.length);
+
         showAlert(form, 'success', 'Local cadastrado com sucesso!');
+
+        const targetUrl = place?.id ? `local-detalhes.html?id=${place.id}` : 'local-detalhes.html';
+        if (successActions) {
+          successActions.classList.remove('d-none');
+          successActions.innerHTML = '';
+          const viewButton = document.createElement('a');
+          viewButton.className = 'btn btn-outline-success';
+          viewButton.href = targetUrl;
+          viewButton.textContent = 'Ver detalhes';
+          successActions.appendChild(viewButton);
+        }
+
         setTimeout(() => {
-          const target = place?.id ? `local-detalhes.html?id=${place.id}` : 'local-detalhes.html';
-          window.location.href = target;
-        }, 800);
+          window.location.href = targetUrl;
+        }, 2000);
       } catch (err) {
+        if (err.status === 401) {
+          clearSession();
+          window.location.href = 'login.html';
+          return;
+        }
         console.error('[cadastro-local] erro', err);
         const message = err.data?.error || 'Erro ao cadastrar local.';
         showAlert(form, 'danger', message);
+      } finally {
+        submitButton?.removeAttribute('disabled');
       }
     });
   }
@@ -983,12 +1093,16 @@
     if (!detailRoot) return;
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
+    const loading = document.getElementById('placeLoading');
+    const favoriteButton = document.getElementById('favoriteToggle');
+    const favoriteHint = document.getElementById('favoriteHint');
+
     if (!id) {
+      loading?.classList.add('d-none');
       showAlert(detailRoot, 'warning', 'Local nao informado.');
       return;
     }
 
-    const loading = document.getElementById('placeLoading');
     loading?.classList.remove('d-none');
     try {
       const place = await apiRequest(`${ENDPOINTS.place}/${id}`);
@@ -1012,8 +1126,6 @@
 
       renderFeatureBadges(document.getElementById('placeFeatureList'), place.features || [], { flags: place.accessibilityFlags });
       renderPlacePhotos(place);
-      const favoriteButton = document.getElementById('favoriteToggle');
-      const favoriteHint = document.getElementById('favoriteHint');
       setupFavoriteButton(favoriteButton, favoriteHint, id, place.isFavorite);
 
       let currentReviews = Array.isArray(place.reviews) ? place.reviews.slice() : [];
@@ -1040,7 +1152,18 @@
       });
     } catch (err) {
       console.error('[local-detalhes] erro', err);
-      showAlert(detailRoot, 'danger', err.data?.error || 'Erro ao carregar dados do local.');
+      const isNotFound = err.status === 404;
+      const message = err.data?.error || (isNotFound ? 'Local nao encontrado.' : 'Erro ao carregar dados do local.');
+      showAlert(detailRoot, isNotFound ? 'warning' : 'danger', message);
+      if (isNotFound) {
+        document.getElementById('placeTitle')?.replaceChildren(document.createTextNode('Local nao encontrado'));
+        document.getElementById('placeDescription')?.replaceChildren(document.createTextNode(''));
+      }
+      favoriteButton?.setAttribute('disabled', 'disabled');
+      if (favoriteHint) {
+        favoriteHint.classList.remove('d-none');
+        favoriteHint.textContent = 'Favoritos indisponiveis.';
+      }
     } finally {
       loading?.classList.add('d-none');
     }
@@ -1084,6 +1207,7 @@
 
     ensureMainIdAndSkipLink();
     markActiveNav();
+    bootstrapSession();
     initLogin();
     initRegister();
     initForgotPassword();
@@ -1284,14 +1408,9 @@
         }
       }
 
-      const logoutLinks = document.querySelectorAll('[data-action="logout"]');
-      logoutLinks.forEach((link) => {
-        link.addEventListener('click', (event) => {
-          event.preventDefault();
-          clearSession();
-          window.location.href = 'index.html';
-        });
-      });
+      setSession(getToken(), me);
+      applySessionToNav(me);
+      bindLogoutHandlers();
   } catch (err) {
     console.error('[perfil] erro', err);
     showAlert(profileRoot, 'danger', err.data?.error || 'Erro ao carregar perfil.');

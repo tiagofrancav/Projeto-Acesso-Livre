@@ -1,5 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import morgan from 'morgan';
 import authRouter from './routes/auth.js';
@@ -9,10 +12,16 @@ import feedbackRouter from './routes/feedback.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+
+fs.mkdirSync(uploadsDir, { recursive: true });
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '10mb' }));
 app.use(morgan('dev'));
+app.use('/uploads', express.static(uploadsDir));
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
