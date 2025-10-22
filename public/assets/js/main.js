@@ -11,6 +11,8 @@
 
   const ENDPOINTS = {
     login: '/auth/login',
+    forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
     register: '/users',
     place: '/places',
     placeFavorites: (id) => `/places/${id}/favorites`,
@@ -449,11 +451,148 @@
   }
 
   function initForgotPassword() {
-    const form = document.getElementById('forgotPasswordForm');
-    if (!form) return;
-    form.addEventListener('submit', (event) => {
+    const requestSection = document.getElementById('forgotPasswordRequest');
+    const resetSection = document.getElementById('forgotPasswordReset');
+    const successSection = document.getElementById('forgotPasswordSuccess');
+    const requestForm = document.getElementById('forgotPasswordRequestForm');
+    const resetForm = document.getElementById('forgotPasswordResetForm');
+    const successMessage = document.getElementById('forgotPasswordSuccessMessage');
+    const titleEl = document.getElementById('forgotPasswordTitle');
+    const subtitleEl = document.getElementById('forgotPasswordSubtitle');
+    const emailInput = document.getElementById('forgotPasswordEmail');
+    const senhaInput = document.getElementById('resetPasswordSenha');
+    const confirmInput = document.getElementById('resetPasswordConfirmacao');
+
+    if (!requestSection && !resetSection && !successSection) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const state = {
+      token: (params.get('token') || '').trim()
+    };
+
+    const sections = {
+      request: requestSection,
+      reset: resetSection,
+      success: successSection
+    };
+
+    function toggleStep(step) {
+      Object.entries(sections).forEach(([key, element]) => {
+        if (!element) return;
+        element.classList.toggle('d-none', key !== step);
+      });
+    }
+
+    function updateHeader(title, subtitle) {
+      if (titleEl && title) {
+        titleEl.textContent = title;
+      }
+      if (!subtitleEl) return;
+      if (subtitle) {
+        subtitleEl.textContent = subtitle;
+        subtitleEl.classList.remove('d-none');
+      } else {
+        subtitleEl.classList.add('d-none');
+      }
+    }
+
+    function toggleFormSubmitting(form, isSubmitting, loadingLabel) {
+      if (!form) return;
+      const button = form.querySelector('button[type="submit"]');
+      if (!button) return;
+      if (isSubmitting) {
+        if (!button.dataset.originalText) {
+          button.dataset.originalText = button.textContent ?? '';
+        }
+        if (loadingLabel) {
+          button.textContent = loadingLabel;
+        }
+        button.setAttribute('disabled', 'disabled');
+      } else {
+        button.removeAttribute('disabled');
+        if (button.dataset.originalText) {
+          button.textContent = button.dataset.originalText;
+          delete button.dataset.originalText;
+        }
+      }
+    }
+
+    if (state.token) {
+      toggleStep('reset');
+      updateHeader('Definir nova senha', 'Crie uma nova senha para continuar.');
+    } else {
+      toggleStep('request');
+      updateHeader('Recuperar senha', 'Informe seu email e enviaremos um link para redefinir sua senha.');
+    }
+
+    requestForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
-      showAlert(form, 'info', 'Funcionalidade em desenvolvimento.');
+      const email = emailInput?.value.trim().toLowerCase() || '';
+      if (!email) {
+        showAlert(requestForm, 'warning', 'Informe um email valido.');
+        return;
+      }
+
+      toggleFormSubmitting(requestForm, true, 'Enviando...');
+      try {
+        await apiRequest(ENDPOINTS.forgotPassword, {
+          method: 'POST',
+          body: { email },
+          skipAuth: true
+        });
+        toggleStep('success');
+        if (successMessage) {
+          successMessage.textContent = 'Se o email estiver cadastrado, voce recebera um link para redefinir sua senha.';
+        }
+        updateHeader('Confira seu email', 'Enviamos as instrucoes para continuar.');
+      } catch (err) {
+        console.error('[forgot-password] erro', err);
+        const message = err.data?.error || 'Nao foi possivel iniciar a redefinicao.';
+        showAlert(requestForm, 'danger', message);
+      } finally {
+        toggleFormSubmitting(requestForm, false);
+      }
+    });
+
+    resetForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const senha = senhaInput?.value || '';
+      const confirmacao = confirmInput?.value || '';
+
+      if (!state.token) {
+        showAlert(resetForm, 'danger', 'Token de redefinicao ausente ou invalido.');
+        return;
+      }
+
+      if (senha.length < 8) {
+        showAlert(resetForm, 'warning', 'A senha deve conter pelo menos 8 caracteres.');
+        return;
+      }
+
+      if (senha !== confirmacao) {
+        showAlert(resetForm, 'warning', 'As senhas nao conferem.');
+        return;
+      }
+
+      toggleFormSubmitting(resetForm, true, 'Salvando...');
+      try {
+        await apiRequest(ENDPOINTS.resetPassword, {
+          method: 'POST',
+          body: { token: state.token, senha },
+          skipAuth: true
+        });
+        toggleStep('success');
+        if (successMessage) {
+          successMessage.textContent = 'Sua senha foi atualizada com sucesso.';
+        }
+        updateHeader('Senha atualizada', 'Voce ja pode fazer login com a nova senha.');
+      } catch (err) {
+        console.error('[reset-password] erro', err);
+        const message = err.data?.error || 'Nao foi possivel redefinir sua senha.';
+        showAlert(resetForm, 'danger', message);
+      } finally {
+        toggleFormSubmitting(resetForm, false);
+      }
     });
   }
 

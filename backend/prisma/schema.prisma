@@ -18,6 +18,7 @@ model User {
   places       Place[]   @relation("PlaceOwner")
   favorites    Favorite[]
   responses    QuestionnaireResponse[]
+  resetTokens  PasswordResetToken[]
 }
 
 model Place {
@@ -89,4 +90,14 @@ model QuestionnaireResponse {
   createdAt DateTime @default(now())
   userId    Int?
   user      User?    @relation(fields: [userId], references: [id])
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
 }

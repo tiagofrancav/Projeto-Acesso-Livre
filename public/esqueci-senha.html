@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- public build -->
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Senha Redefinida | Livre Acesso</title>
+    <title>Recuperar Senha | Livre Acesso</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <!-- Barra de NavegaÃ§Ã£o -->
+    <!-- Barra de Navegacao -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container">
             <a class="navbar-brand" href="index.html">
@@ -25,16 +25,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">Iní­cio</a>
+                        <a class="nav-link" href="index.html">Inicio</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pesquisa.html">Buscar Locais</a>
+                        <a class="nav-link" href="pesquisa.html">Buscar locais</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="cadastro-local.html">Cadastrar Local</a>
+                        <a class="nav-link" href="cadastro-local.html">Cadastrar local</a>
                     </li>
                 </ul>
-                                <ul class="navbar-nav" data-auth="guest">
+                <ul class="navbar-nav" data-auth="guest">
                     <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
                 </ul>
@@ -53,19 +53,53 @@
         </div>
     </nav>
 
-    <!-- SeÃ§Ã£o de ConfirmaÃ§Ã£o -->
-    <section class="confirmation-section py-5">
+    <!-- Recuperar Senha -->
+    <section class="py-5">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-md-8 col-lg-6">
-                    <div class="card confirmation-card text-center">
+                    <div class="card border-0 shadow-sm">
                         <div class="card-body p-5">
-                            <div class="confirmation-icon">
-                                <i class="fas fa-check-circle"></i>
+                            <h2 class="mb-3 page-title text-center" id="forgotPasswordTitle">Recuperar senha</h2>
+                            <p class="text-muted text-center mb-4" id="forgotPasswordSubtitle">
+                                Informe seu email e enviaremos um link para redefinir sua senha.
+                            </p>
+
+                            <div id="forgotPasswordRequest">
+                                <form id="forgotPasswordRequestForm" class="text-start" novalidate>
+                                    <div class="mb-3">
+                                        <label for="forgotPasswordEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="forgotPasswordEmail" placeholder="nome@exemplo.com" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-success w-100">Enviar link de redefinicao</button>
+                                </form>
+                                <p class="text-muted small mt-3 mb-0">
+                                    Verifique sua caixa de entrada e o spam. O link expira em algumas horas.
+                                </p>
                             </div>
-                            <h2 class="mb-3 page-title">Senha Redefinida com Sucesso!</h2>
-                            <p class="mb-4">Sua senha foi atualizada com sucesso. Agora vocÃª pode fazer login com sua nova senha.</p>
-                            <a href="login.html" class="btn btn-success px-4">Ir para Login</a>
+
+                            <div id="forgotPasswordReset" class="d-none">
+                                <form id="forgotPasswordResetForm" class="text-start" novalidate>
+                                    <div class="mb-3">
+                                        <label for="resetPasswordSenha" class="form-label">Nova senha</label>
+                                        <input type="password" class="form-control" id="resetPasswordSenha" minlength="8" required>
+                                        <small class="text-muted">Minimo de 8 caracteres.</small>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label for="resetPasswordConfirmacao" class="form-label">Confirmar nova senha</label>
+                                        <input type="password" class="form-control" id="resetPasswordConfirmacao" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-success w-100">Redefinir senha</button>
+                                </form>
+                            </div>
+
+                            <div id="forgotPasswordSuccess" class="d-none text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-check-circle text-success display-5"></i>
+                                </div>
+                                <p class="mb-4" id="forgotPasswordSuccessMessage"></p>
+                                <a href="login.html" class="btn btn-success px-4">Ir para login</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -73,7 +107,7 @@
         </div>
     </section>
 
-    <!-- RodapÃ© -->
+    <!-- Rodape -->
     <footer class="bg-dark text-white py-4">
         <div class="container text-center">
             <p class="mb-0">&copy; 2025 Livre Acesso. Todos os direitos reservados.</p>
