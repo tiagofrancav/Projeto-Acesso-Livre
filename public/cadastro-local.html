@@ -44,15 +44,15 @@
                     <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
                 </ul>
-                <ul class="navbar-nav d-none align-items-lg-center gap-2" data-auth="auth">
-                    <li class="nav-item">
-                        <span class="nav-link fw-semibold" id="navbarUserName"></span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="perfil.html">Minha conta</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-action="logout">Sair</a>
+                <ul class="navbar-nav d-none" data-auth="auth">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> <span id="navbarUserName">Perfil</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html">Meu Perfil</a></li>
+                            <li><a class="dropdown-item" href="#" data-action="logout">Sair</a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -91,18 +91,76 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="endereco" class="form-label">Endereço*</label>
-                                    <input type="text" class="form-control" id="endereco" required>
+                                    <h5 class="h6 mb-3">Endereco</h5>
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label for="cep" class="form-label">CEP*</label>
+                                            <input type="text" class="form-control" id="cep" name="cep" inputmode="numeric" pattern="\d{8}" autocomplete="postal-code" maxlength="8" required>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <label for="logradouro" class="form-label">Logradouro*</label>
+                                            <input type="text" class="form-control" id="logradouro" name="logradouro" autocomplete="address-line1" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="numero" class="form-label">Numero*</label>
+                                            <input type="text" class="form-control" id="numero" name="numero" autocomplete="address-line2" required>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <label for="complemento" class="form-label">Complemento</label>
+                                            <input type="text" class="form-control" id="complemento" name="complemento" autocomplete="additional-name" placeholder="Apartamento, bloco ou ponto de referencia">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="bairro" class="form-label">Bairro*</label>
+                                            <input type="text" class="form-control" id="bairro" name="bairro" autocomplete="address-level3" required>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label for="cidade" class="form-label">Cidade*</label>
+                                            <input type="text" class="form-control" id="cidade" name="cidade" autocomplete="address-level2" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="estado" class="form-label">Estado*</label>
+                                            <select class="form-select" id="estado" name="estado" autocomplete="address-level1" required>
+                                                <option value="" selected disabled>UF</option>
+                                                <option value="AC">AC</option>
+                                                <option value="AL">AL</option>
+                                                <option value="AP">AP</option>
+                                                <option value="AM">AM</option>
+                                                <option value="BA">BA</option>
+                                                <option value="CE">CE</option>
+                                                <option value="DF">DF</option>
+                                                <option value="ES">ES</option>
+                                                <option value="GO">GO</option>
+                                                <option value="MA">MA</option>
+                                                <option value="MT">MT</option>
+                                                <option value="MS">MS</option>
+                                                <option value="MG">MG</option>
+                                                <option value="PA">PA</option>
+                                                <option value="PB">PB</option>
+                                                <option value="PR">PR</option>
+                                                <option value="PE">PE</option>
+                                                <option value="PI">PI</option>
+                                                <option value="RJ">RJ</option>
+                                                <option value="RN">RN</option>
+                                                <option value="RS">RS</option>
+                                                <option value="RO">RO</option>
+                                                <option value="RR">RR</option>
+                                                <option value="SC">SC</option>
+                                                <option value="SP">SP</option>
+                                                <option value="SE">SE</option>
+                                                <option value="TO">TO</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Localização no mapa*</label>
+                                    <label class="form-label">Localizacao no mapa*</label>
                                     <p class="form-text">Clique no mapa para marcar o ponto exato do estabelecimento.</p>
                                     <div id="map" data-map="true" data-map-mode="picker" data-center-lat="-2.525730" data-center-lng="-44.271690" data-zoom="13" data-marker="false"></div>
                                     <input type="hidden" id="latitude" name="latitude">
                                     <input type="hidden" id="longitude" name="longitude">
                                     <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
-                                        <button type="button" class="btn btn-outline-success btn-sm" id="useCurrentLocation">Usar minha localização</button>
+                                        <button type="button" class="btn btn-outline-success btn-sm" id="useCurrentLocation">Usar minha localizacao</button>
                                         <small class="form-text text-muted mb-0" id="mapSelectedCoords">Nenhum ponto selecionado.</small>
                                     </div>
                                 </div>
@@ -210,7 +268,7 @@
                                 <div class="mb-3">
                                     <label for="descricao" class="form-label">DescriÃ§Ã£o*</label>
                                     <textarea class="form-control" id="descricao" rows="4" required></textarea>
-                                    <small class="text-muted">Descreva detalhes sobre a acessibilidade do local que possam ser ÃƒÂºteis para outros usuÃƒÂ¡rios.</small>
+                                    <small class="text-muted">Descreva detalhes sobre a acessibilidade do local que possam ser uteis para outros usuarios.</small>
                                 </div>
 
                                 <div class="mb-3">

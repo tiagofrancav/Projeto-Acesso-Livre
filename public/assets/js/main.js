@@ -208,6 +208,15 @@
     return data;
   }
 
+  function resolveMediaUrl(pathname) {
+    if (!pathname) return '';
+    if (/^https?:\/\//i.test(pathname) || pathname.startsWith('data:')) {
+      return pathname;
+    }
+    const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+    return `${API_BASE_URL}${normalizedPath}`;
+  }
+
   function showAlert(container, type, message) {
     if (!container) return;
     const el = document.createElement('div');
@@ -641,6 +650,7 @@
     const coordsHint = document.getElementById('mapSelectedCoords');
     const locationButton = document.getElementById('useCurrentLocation');
     const locationButtonDefaultLabel = locationButton?.textContent?.trim() || 'Usar minha localizacao';
+    const cepInput = document.getElementById('cep');
     let selectedLat = null;
     let selectedLng = null;
     let isRequestingLocation = false;
@@ -657,6 +667,15 @@
         window.location.href = 'login.html';
       }, 1500);
       return;
+    }
+
+    if (cepInput) {
+      cepInput.addEventListener('input', () => {
+        const digits = cepInput.value.replace(/\D/g, '').slice(0, 8);
+        if (cepInput.value !== digits) {
+          cepInput.value = digits;
+        }
+      });
     }
 
     const updateCoordsHint = () => {
@@ -833,7 +852,7 @@
             }
           };
         })
-        .catch(() => {});
+        .catch(() => { });
     }
 
     updateCoordsHint();
@@ -871,19 +890,55 @@
       event.preventDefault();
       const nome = document.getElementById('nomeLocal')?.value.trim() || '';
       const tipo = document.getElementById('tipoLocal')?.value || '';
-      const endereco = document.getElementById('endereco')?.value.trim() || '';
+      const cepValue = cepInput?.value || '';
+      const logradouro = document.getElementById('logradouro')?.value.trim() || '';
+      const numero = document.getElementById('numero')?.value.trim() || '';
+      const complemento = document.getElementById('complemento')?.value.trim() || '';
+      const bairro = document.getElementById('bairro')?.value.trim() || '';
+      const cidade = document.getElementById('cidade')?.value.trim() || '';
+      const estado = document.getElementById('estado')?.value.trim().toUpperCase() || '';
       const telefone = document.getElementById('telefone')?.value.trim() || '';
       const site = document.getElementById('site')?.value.trim() || '';
       const descricao = document.getElementById('descricao')?.value.trim() || '';
       const latValue = Number.parseFloat(latInput?.value ?? '');
       const lngValue = Number.parseFloat(lngInput?.value ?? '');
+      const cepDigits = cepValue.replace(/\D/g, '').slice(0, 8);
+      const formattedCep = cepDigits.length === 8 ? `${cepDigits.slice(0, 5)}-${cepDigits.slice(5)}` : '';
+      const addressParts = [];
+      if (logradouro) {
+        addressParts.push(numero ? `${logradouro}, ${numero}` : logradouro);
+      }
+      if (complemento) {
+        addressParts.push(complemento);
+      }
+      if (bairro) {
+        addressParts.push(bairro);
+      }
+      const cityState = [cidade, estado].filter(Boolean).join(' - ');
+      if (cityState) {
+        addressParts.push(cityState);
+      }
+      if (formattedCep) {
+        addressParts.push(`CEP ${formattedCep}`);
+      }
+      const endereco = addressParts.join(' | ');
 
       if (successActions) {
         successActions.classList.add('d-none');
         successActions.innerHTML = '';
       }
 
-      if (!nome || !tipo || !endereco || !descricao) {
+      if (
+        !nome ||
+        !tipo ||
+        !descricao ||
+        !logradouro ||
+        !numero ||
+        !bairro ||
+        !cidade ||
+        !estado ||
+        !formattedCep
+      ) {
         showAlert(form, 'warning', 'Preencha os campos obrigatorios.');
         return;
       }
@@ -1031,13 +1086,13 @@
         link.appendChild(address);
       }
 
-        const featureWrap = document.createElement('div');
-        renderFeatureBadges(featureWrap, place.features || [], { showEmpty: false, limit: 3, flags: place.accessibilityFlags });
-        link.appendChild(featureWrap);
+      const featureWrap = document.createElement('div');
+      renderFeatureBadges(featureWrap, place.features || [], { showEmpty: false, limit: 3, flags: place.accessibilityFlags });
+      link.appendChild(featureWrap);
 
-        list.appendChild(link);
-      });
-    }
+      list.appendChild(link);
+    });
+  }
 
   function renderHomePlaces(places) {
     const container = document.getElementById('recentPlaces');
@@ -1064,7 +1119,7 @@
         img.className = 'card-img-top';
         img.loading = 'lazy';
         img.alt = place.name || 'Foto do local';
-        img.src = place.photos[0].url;
+        img.src = resolveMediaUrl(place.photos[0].url);
         card.appendChild(img);
       } else {
         const placeholder = document.createElement('div');
@@ -1215,7 +1270,7 @@
       img.className = 'd-block w-100';
       img.alt = `Foto ${index + 1} de ${place.name}`;
       img.loading = 'lazy';
-      img.src = photo.url;
+      img.src = resolveMediaUrl(photo.url);
       item.appendChild(img);
       inner.appendChild(item);
 
@@ -1818,13 +1873,13 @@
       setSession(getToken(), me);
       applySessionToNav(me);
       bindLogoutHandlers();
-  } catch (err) {
-    console.error('[perfil] erro', err);
-    showAlert(profileRoot, 'danger', err.data?.error || 'Erro ao carregar perfil.');
-  } finally {
-    loading?.classList.add('d-none');
+    } catch (err) {
+      console.error('[perfil] erro', err);
+      showAlert(profileRoot, 'danger', err.data?.error || 'Erro ao carregar perfil.');
+    } finally {
+      loading?.classList.add('d-none');
+    }
   }
-}
 
 })();
 
