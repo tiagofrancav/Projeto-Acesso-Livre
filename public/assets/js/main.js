@@ -1410,9 +1410,30 @@
   function initQuestionario() {
     const form = document.getElementById('formQuestionario');
     if (!form) return;
+    const token = getToken();
+
+    if (!token) {
+      showAlert(form, 'warning', 'E necessario estar logado para enviar o questionario.');
+      form.querySelectorAll('input, select, textarea, button').forEach((element) => {
+        element.setAttribute('disabled', 'disabled');
+      });
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 1500);
+      return;
+    }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (!getToken()) {
+        showAlert(form, 'warning', 'Sessao expirada. Faca login novamente.');
+        clearSession();
+        applySessionToNav(null);
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 1500);
+        return;
+      }
       const data = new FormData(form);
       const payload = {};
       data.forEach((value, key) => {
@@ -1426,6 +1447,15 @@
         window.location.href = 'index.html';
       } catch (err) {
         console.error('[questionario] erro', err);
+        if (err.status === 401) {
+          clearSession();
+          applySessionToNav(null);
+          showAlert(form, 'warning', 'Sessao expirada. Faca login novamente.');
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 1500);
+          return;
+        }
         showAlert(form, 'danger', err.data?.error || 'Erro ao enviar o questionario.');
       }
     });
