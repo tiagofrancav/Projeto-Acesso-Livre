@@ -26,6 +26,13 @@ model Place {
   name        String
   type        String
   address     String
+  cep          String?
+  street       String?
+  number       String?
+  complement   String?
+  neighborhood String?
+  city         String?
+  state        String?
   accessibilityFlags Json?
   phone       String?
   website     String?

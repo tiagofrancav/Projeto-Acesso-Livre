@@ -123,6 +123,37 @@ function average(values = []) {
   return Number((total / values.length).toFixed(2));
 }
 
+function digitsOnly(value) {
+  if (value === null || value === undefined) return '';
+  return String(value).replace(/\D/g, '');
+}
+
+function normalizeCep(value) {
+  const digits = digitsOnly(value).slice(0, 8);
+  return digits.length === 8 ? digits : null;
+}
+
+function formatCep(value) {
+  const digits = normalizeCep(value);
+  if (!digits) return null;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function buildFullAddress({ street, number, complement, neighborhood, city, state, cep }) {
+  const parts = [];
+  const streetLine = street ? (number ? `${street}, ${number}` : street) : '';
+  if (streetLine) parts.push(streetLine);
+  if (complement) parts.push(complement);
+  if (neighborhood) parts.push(neighborhood);
+  const cityState = [city, state].filter(Boolean).join(' - ');
+  if (cityState) parts.push(cityState);
+  if (cep) {
+    const formatted = formatCep(cep);
+    if (formatted) parts.push(`CEP ${formatted}`);
+  }
+  return parts.join(' | ');
+}
+
 function toFloat(value) {
   if (value === null || value === undefined || value === '') return null;
   const parsed = Number(value);
@@ -163,6 +194,14 @@ function basePlaceResponse(place, currentUserId) {
     name: place.name,
     type: place.type,
     address: place.address,
+    cep: place.cep,
+    formattedCep: place.cep ? formatCep(place.cep) : null,
+    street: place.street,
+    number: place.number,
+    complement: place.complement,
+    neighborhood: place.neighborhood,
+    city: place.city,
+    state: place.state,
     accessibilityFlags: place.accessibilityFlags || null,
     phone: place.phone,
     website: place.website,
@@ -208,6 +247,13 @@ router.post('/', requireAuth, async (req, res) => {
       nome,
       tipo,
       endereco,
+      cep,
+      logradouro,
+      numero,
+      complemento,
+      bairro,
+      cidade,
+      estado,
       lat,
       lng,
       descricao,
@@ -219,11 +265,38 @@ router.post('/', requireAuth, async (req, res) => {
 
     const name = typeof nome === 'string' ? nome.trim() : '';
     const type = typeof tipo === 'string' ? tipo.trim() : '';
-    const address = typeof endereco === 'string' ? endereco.trim() : '';
+    const streetValue = typeof logradouro === 'string' ? logradouro.trim() : '';
+    const numberValue = typeof numero === 'string' ? numero.trim() : '';
+    const complementValue = typeof complemento === 'string' ? complemento.trim() : '';
+    const neighborhoodValue = typeof bairro === 'string' ? bairro.trim() : '';
+    const cityValue = typeof cidade === 'string' ? cidade.trim() : '';
+    const stateValue = typeof estado === 'string' ? estado.trim().toUpperCase() : '';
+    const cepDigits = normalizeCep(cep);
     const description = typeof descricao === 'string' ? descricao.trim() : '';
+    const providedAddress = typeof endereco === 'string' ? endereco.trim() : '';
+    const combinedAddress = providedAddress || buildFullAddress({
+      street: streetValue,
+      number: numberValue,
+      complement: complementValue,
+      neighborhood: neighborhoodValue,
+      city: cityValue,
+      state: stateValue,
+      cep: cepDigits
+    });
 
-    if (!name || !type || !address || !description) {
-      return res.status(400).json({ error: 'Nome, tipo, endereco e descricao sao obrigatorios.' });
+    if (!name || !type || !description) {
+      return res.status(400).json({ error: 'Nome, tipo e descricao sao obrigatorios.' });
+    }
+    if (!streetValue || !numberValue || !neighborhoodValue || !cityValue || !stateValue || !cepDigits) {
+      return res.status(400).json({
+        error: 'CEP, logradouro, numero, bairro, cidade e estado sao obrigatorios.'
+      });
+    }
+    if (stateValue.length !== 2) {
+      return res.status(400).json({ error: 'Informe a sigla do estado com 2 caracteres.' });
+    }
+    if (!combinedAddress) {
+      return res.status(400).json({ error: 'Nao foi possivel determinar o endereco do local.' });
     }
 
     const featureKeys = parseFeatureKeys(rawFeatures);
@@ -264,8 +337,15 @@ router.post('/', requireAuth, async (req, res) => {
     const data = {
       name,
       type,
-      address,
+      address: combinedAddress,
       description,
+      cep: cepDigits,
+      street: streetValue,
+      number: numberValue,
+      complement: complementValue || null,
+      neighborhood: neighborhoodValue,
+      city: cityValue,
+      state: stateValue,
       phone: typeof telefone === 'string' && telefone.trim() ? telefone.trim() : null,
       website: typeof site === 'string' && site.trim() ? site.trim() : null,
       lat: toFloat(lat),
@@ -299,33 +379,84 @@ router.post('/', requireAuth, async (req, res) => {
 
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { search, tipo, features: rawFeatures, limit: rawLimit } = req.query;
+    const {
+      search,
+      tipo,
+      features: rawFeatures,
+      limit: rawLimit,
+      cep,
+      bairro,
+      cidade,
+      estado,
+      logradouro,
+      numero,
+      complemento
+    } = req.query;
     const featureKeys = parseFeatureKeys(rawFeatures);
 
     let take = Number(rawLimit);
     if (!Number.isFinite(take) || take <= 0) take = 50;
     take = Math.min(Math.max(Math.trunc(take), 1), 50);
 
-    const where = {};
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { address: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+    const filters = [];
+
+    if (typeof search === 'string' && search.trim()) {
+      const term = search.trim();
+      const orFilters = [
+        { name: { contains: term, mode: 'insensitive' } },
+        { address: { contains: term, mode: 'insensitive' } },
+        { description: { contains: term, mode: 'insensitive' } },
+        { street: { contains: term, mode: 'insensitive' } },
+        { neighborhood: { contains: term, mode: 'insensitive' } },
+        { city: { contains: term, mode: 'insensitive' } },
+        { state: { contains: term, mode: 'insensitive' } }
       ];
+      const searchCep = digitsOnly(term).slice(0, 8);
+      if (searchCep) {
+        orFilters.push({ cep: { contains: searchCep } });
+      }
+      filters.push({ OR: orFilters });
     }
-    if (tipo) {
-      where.type = tipo;
+    if (typeof tipo === 'string' && tipo.trim()) {
+      filters.push({ type: tipo.trim() });
     }
     if (featureKeys.length) {
-      where.features = {
-        some: {
-          feature: {
-            key: { in: featureKeys }
+      filters.push({
+        features: {
+          some: {
+            feature: {
+              key: { in: featureKeys }
+            }
           }
         }
-      };
+      });
     }
+    if (cep) {
+      const cepDigits = digitsOnly(cep).slice(0, 8);
+      if (cepDigits) {
+        filters.push({ cep: { contains: cepDigits } });
+      }
+    }
+    if (typeof bairro === 'string' && bairro.trim()) {
+      filters.push({ neighborhood: { contains: bairro.trim(), mode: 'insensitive' } });
+    }
+    if (typeof cidade === 'string' && cidade.trim()) {
+      filters.push({ city: { contains: cidade.trim(), mode: 'insensitive' } });
+    }
+    if (typeof estado === 'string' && estado.trim()) {
+      filters.push({ state: { equals: estado.trim().toUpperCase() } });
+    }
+    if (typeof logradouro === 'string' && logradouro.trim()) {
+      filters.push({ street: { contains: logradouro.trim(), mode: 'insensitive' } });
+    }
+    if (typeof numero === 'string' && numero.trim()) {
+      filters.push({ number: { contains: numero.trim(), mode: 'insensitive' } });
+    }
+    if (typeof complemento === 'string' && complemento.trim()) {
+      filters.push({ complement: { contains: complemento.trim(), mode: 'insensitive' } });
+    }
+
+    const where = filters.length ? { AND: filters } : undefined;
 
     const places = await prisma.place.findMany({
       where,

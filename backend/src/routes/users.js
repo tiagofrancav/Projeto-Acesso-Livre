@@ -22,6 +22,13 @@ function mapPhoto(photo) {
   return { id: photo.id, url: photo.url };
 }
 
+function formatCep(cep) {
+  if (!cep) return null;
+  const digits = String(cep).replace(/\D/g, '').slice(0, 8);
+  if (digits.length !== 8) return null;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
 function summarizePlace(place) {
   if (!place) return null;
   const ratings = (place.reviews || []).map((review) => review.rating);
@@ -30,6 +37,16 @@ function summarizePlace(place) {
     name: place.name,
     type: place.type,
     address: place.address,
+    cep: place.cep,
+    formattedCep: formatCep(place.cep),
+    street: place.street,
+    number: place.number,
+    complement: place.complement,
+    neighborhood: place.neighborhood,
+    city: place.city,
+    state: place.state,
+    lat: place.lat,
+    lng: place.lng,
     accessibilityFlags: place.accessibilityFlags || null,
     phone: place.phone,
     website: place.website,

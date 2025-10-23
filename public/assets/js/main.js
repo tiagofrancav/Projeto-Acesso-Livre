@@ -960,6 +960,13 @@
           nome,
           tipo,
           endereco,
+          cep: cepDigits,
+          logradouro,
+          numero,
+          complemento: complemento || null,
+          bairro,
+          cidade,
+          estado,
           telefone: telefone || null,
           site: site || null,
           descricao,
@@ -1015,9 +1022,15 @@
   }
 
   function collectSearchFilters() {
-    const params = new URLSearchParams(window.location.search);
     const locationInput = document.getElementById('localizacao');
     const typeSelect = document.getElementById('tipo-local');
+    const cepInput = document.getElementById('filtroCep');
+    const bairroInput = document.getElementById('filtroBairro');
+    const cidadeInput = document.getElementById('filtroCidade');
+    const estadoSelect = document.getElementById('filtroEstado');
+    const logradouroInput = document.getElementById('filtroLogradouro');
+    const numeroInput = document.getElementById('filtroNumero');
+    const complementoInput = document.getElementById('filtroComplemento');
     const selectedFeatures = new Set();
 
     Object.entries(FEATURE_GROUP_FILTERS).forEach(([checkboxId, featureKeys]) => {
@@ -1027,13 +1040,45 @@
       }
     });
 
-    const searchValue = locationInput?.value.trim() || params.get('search') || '';
-    const typeValue = typeSelect?.value || params.get('tipo') || '';
-
     const query = new URLSearchParams();
-    if (searchValue) query.set('search', searchValue);
-    if (typeValue && typeValue !== 'todos') query.set('tipo', typeValue);
-    if (selectedFeatures.size) query.set('features', Array.from(selectedFeatures).join(','));
+    const searchValue = locationInput?.value.trim();
+    if (searchValue) {
+      query.set('search', searchValue);
+    }
+
+    const typeValue = typeSelect?.value || '';
+    if (typeValue && typeValue !== 'todos') {
+      query.set('tipo', typeValue);
+    }
+
+    if (cepInput) {
+      const cepDigits = (cepInput.value || '').replace(/\D/g, '').slice(0, 8);
+      if (cepDigits) {
+        query.set('cep', cepDigits);
+      }
+    }
+    if (bairroInput?.value.trim()) {
+      query.set('bairro', bairroInput.value.trim());
+    }
+    if (cidadeInput?.value.trim()) {
+      query.set('cidade', cidadeInput.value.trim());
+    }
+    if (estadoSelect?.value.trim()) {
+      query.set('estado', estadoSelect.value.trim().toUpperCase());
+    }
+    if (logradouroInput?.value.trim()) {
+      query.set('logradouro', logradouroInput.value.trim());
+    }
+    if (numeroInput?.value.trim()) {
+      query.set('numero', numeroInput.value.trim());
+    }
+    if (complementoInput?.value.trim()) {
+      query.set('complemento', complementoInput.value.trim());
+    }
+
+    if (selectedFeatures.size) {
+      query.set('features', Array.from(selectedFeatures).join(','));
+    }
 
     return query;
   }
@@ -1204,7 +1249,12 @@
     if (spinner) spinner.classList.remove('d-none');
     try {
       const query = collectSearchFilters();
-      const endpoint = query.toString() ? `${ENDPOINTS.place}?${query.toString()}` : ENDPOINTS.place;
+      const queryString = query.toString();
+      const endpoint = queryString ? `${ENDPOINTS.place}?${queryString}` : ENDPOINTS.place;
+      if (history && history.replaceState) {
+        const newUrl = queryString ? `${location.pathname}?${queryString}` : location.pathname;
+        history.replaceState(null, '', newUrl);
+      }
       const results = await apiRequest(endpoint);
       renderSearchResults(results || []);
     } catch (err) {
@@ -1223,11 +1273,65 @@
     const params = new URLSearchParams(window.location.search);
     const locationInput = document.getElementById('localizacao');
     const typeSelect = document.getElementById('tipo-local');
+    const cepFilter = document.getElementById('filtroCep');
+    const bairroFilter = document.getElementById('filtroBairro');
+    const cidadeFilter = document.getElementById('filtroCidade');
+    const estadoFilter = document.getElementById('filtroEstado');
+    const logradouroFilter = document.getElementById('filtroLogradouro');
+    const numeroFilter = document.getElementById('filtroNumero');
+    const complementoFilter = document.getElementById('filtroComplemento');
+
+    const featureParam = params.get('features');
+    if (featureParam) {
+      const featureSet = new Set(
+        featureParam
+          .split(',')
+          .map((value) => value.trim().toLowerCase())
+          .filter(Boolean)
+      );
+      Object.entries(FEATURE_GROUP_FILTERS).forEach(([checkboxId, featureKeys]) => {
+        const checkbox = document.getElementById(checkboxId);
+        if (!checkbox) return;
+        const hasAll = featureKeys.every((key) => featureSet.has(key));
+        checkbox.checked = hasAll;
+      });
+    }
+
     if (locationInput && params.get('search')) {
       locationInput.value = params.get('search');
     }
     if (typeSelect && params.get('tipo')) {
       typeSelect.value = params.get('tipo');
+    }
+    if (cepFilter) {
+      const setCepValue = (value) => {
+        const digits = (value || '').replace(/\D/g, '').slice(0, 8);
+        if (cepFilter.value !== digits) {
+          cepFilter.value = digits;
+        }
+      };
+      if (params.get('cep')) {
+        setCepValue(params.get('cep'));
+      }
+      cepFilter.addEventListener('input', () => setCepValue(cepFilter.value));
+    }
+    if (bairroFilter && params.get('bairro')) {
+      bairroFilter.value = params.get('bairro');
+    }
+    if (cidadeFilter && params.get('cidade')) {
+      cidadeFilter.value = params.get('cidade');
+    }
+    if (estadoFilter && params.get('estado')) {
+      estadoFilter.value = params.get('estado').toUpperCase();
+    }
+    if (logradouroFilter && params.get('logradouro')) {
+      logradouroFilter.value = params.get('logradouro');
+    }
+    if (numeroFilter && params.get('numero')) {
+      numeroFilter.value = params.get('numero');
+    }
+    if (complementoFilter && params.get('complemento')) {
+      complementoFilter.value = params.get('complemento');
     }
 
     form.addEventListener('submit', (event) => {
@@ -1238,12 +1342,18 @@
       checkbox.addEventListener('change', () => loadPlaces());
     });
     typeSelect?.addEventListener('change', () => loadPlaces());
+    estadoFilter?.addEventListener('change', () => loadPlaces());
+
     const clearButton = document.getElementById('limparFiltros');
     clearButton?.addEventListener('click', (event) => {
       event.preventDefault();
       form.reset();
+      form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+        checkbox.checked = false;
+      });
       loadPlaces();
     });
+
     loadPlaces();
   }
 
