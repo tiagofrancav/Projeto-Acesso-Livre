@@ -6,7 +6,12 @@
 
   const STORAGE_KEYS = {
     token: 'acesso-livre.token',
-    user: 'acesso-livre.user'
+    user: 'acesso-livre.user',
+    questionnaireSent: 'acesso-livre.questionnaire.sent'
+  };
+
+  const FLASH_KEYS = {
+    global: 'acesso-livre.flash'
   };
 
   const ENDPOINTS = {
@@ -18,6 +23,7 @@
     placeFavorites: (id) => `/places/${id}/favorites`,
     placeReviews: (id) => `/places/${id}/reviews`,
     questionnaire: '/feedback',
+    questionnaireStatus: '/feedback/me',
     me: '/users/me'
   };
 
@@ -95,6 +101,108 @@
     window.localStorage.removeItem(STORAGE_KEYS.user);
   }
 
+  let questionnaireSentCache = null;
+
+  function normalizeQuestionnaireKey(value) {
+    if (value == null) return null;
+    if (typeof value === 'string') {
+      const normalized = value.trim();
+      if (!normalized) return null;
+      if (normalized.includes('@')) {
+        return normalized.toLowerCase();
+      }
+      return normalized;
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return String(value);
+    }
+    if (typeof value === 'object' && 'toString' in value) {
+      const stringified = String(value).trim();
+      if (!stringified) return null;
+      return stringified.includes('@') ? stringified.toLowerCase() : stringified;
+    }
+    return String(value);
+  }
+
+  function getQuestionnaireSentMap() {
+    if (questionnaireSentCache) return questionnaireSentCache;
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEYS.questionnaireSent);
+      questionnaireSentCache = raw ? JSON.parse(raw) : {};
+    } catch (err) {
+      console.warn('[questionario] falha ao ler status de envio', err);
+      window.localStorage.removeItem(STORAGE_KEYS.questionnaireSent);
+      questionnaireSentCache = {};
+    }
+    return questionnaireSentCache;
+  }
+
+  function isQuestionnaireSent(userKey) {
+    const key = normalizeQuestionnaireKey(userKey);
+    if (!key) return false;
+    const map = getQuestionnaireSentMap();
+    return Boolean(map[key]);
+  }
+
+  function markQuestionnaireSent(userKey) {
+    const key = normalizeQuestionnaireKey(userKey);
+    if (!key) return;
+    const map = getQuestionnaireSentMap();
+    map[key] = true;
+    questionnaireSentCache = map;
+    window.localStorage.setItem(STORAGE_KEYS.questionnaireSent, JSON.stringify(map));
+  }
+
+  function resolveQuestionnaireUserKey(user, token) {
+    const candidate = user?.id ?? user?._id ?? user?.email ?? token ?? null;
+    return normalizeQuestionnaireKey(candidate);
+  }
+
+  function setFlashMessage(type, message) {
+    try {
+      window.sessionStorage.setItem(FLASH_KEYS.global, JSON.stringify({ type, message }));
+    } catch (err) {
+      console.warn('[flash] falha ao armazenar mensagem', err);
+    }
+  }
+
+  function consumeFlashMessage() {
+    try {
+      const raw = window.sessionStorage.getItem(FLASH_KEYS.global);
+      if (!raw) return null;
+      window.sessionStorage.removeItem(FLASH_KEYS.global);
+      return JSON.parse(raw);
+    } catch (err) {
+      console.warn('[flash] falha ao ler mensagem', err);
+      return null;
+    }
+  }
+
+  function displayPendingFlashMessage() {
+    const flash = consumeFlashMessage();
+    if (!flash || !flash.message) return;
+    const target =
+      document.querySelector('[data-flash-target]') ||
+      document.querySelector('.hero-section .container') ||
+      document.querySelector('main') ||
+      document.body;
+    showAlert(target, flash.type || 'info', flash.message);
+  }
+
+  function setQuestionnaireNavVisible(visible) {
+    const link = document.querySelector('a[href="questionario.html"]');
+    if (!link) return;
+    const item = link.closest('.nav-item') || link;
+    item.classList.toggle('d-none', visible === false);
+  }
+
+  function updateQuestionnaireNavVisibility(user) {
+    const token = getToken();
+    const key = resolveQuestionnaireUserKey(user, token);
+    const shouldHide = Boolean(user) && isQuestionnaireSent(key);
+    setQuestionnaireNavVisible(!shouldHide);
+  }
+
   function applySessionToNav(user) {
     const hasUser = Boolean(user && (user.name || user.email));
     document.querySelectorAll('[data-auth="guest"]').forEach((element) => {
@@ -109,6 +217,7 @@
         ? ([user.name, user.surname].filter(Boolean).join(' ') || user.email || '')
         : '';
     }
+    updateQuestionnaireNavVisibility(hasUser ? user : null);
   }
 
   function bindLogoutHandlers() {
@@ -217,6 +326,17 @@
     return `${API_BASE_URL}${normalizedPath}`;
   }
 
+  function setFormDisabled(form, disabled = true) {
+    if (!form) return;
+    form.querySelectorAll('input, select, textarea, button').forEach((element) => {
+      if (disabled) {
+        element.setAttribute('disabled', 'disabled');
+      } else {
+        element.removeAttribute('disabled');
+      }
+    });
+  }
+
   function showAlert(container, type, message) {
     if (!container) return;
     const el = document.createElement('div');
@@ -225,6 +345,11 @@
     el.setAttribute('aria-live', 'assertive');
     el.textContent = message;
     container.prepend(el);
+    if (typeof container.scrollIntoView === 'function') {
+      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (typeof window.scrollTo === 'function') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     setTimeout(() => el.remove(), 5000);
   }
 
@@ -1711,31 +1836,75 @@
     }
   }
 
-  function initQuestionario() {
+  async function initQuestionario() {
     const form = document.getElementById('formQuestionario');
     if (!form) return;
-    const token = getToken();
-
-    if (!token) {
-      showAlert(form, 'warning', 'E necessario estar logado para enviar o questionario.');
-      form.querySelectorAll('input, select, textarea, button').forEach((element) => {
-        element.setAttribute('disabled', 'disabled');
-      });
+    const redirectToLogin = (message) => {
+      showAlert(form, 'warning', message);
+      setFormDisabled(form, true);
+      clearSession();
+      applySessionToNav(null);
       setTimeout(() => {
         window.location.href = 'login.html';
       }, 1500);
+    };
+
+    let token = getToken();
+    if (!token) {
+      redirectToLogin('E necessario estar logado para enviar o questionario.');
       return;
+    }
+
+    let user = getStoredUser();
+    if (!user) {
+      user = await bootstrapSession();
+      token = getToken();
+      if (!token) {
+        redirectToLogin('Sessao expirada. Faca login novamente.');
+        return;
+      }
+    }
+
+    const submissionKey = resolveQuestionnaireUserKey(user, token);
+    const alreadySentMessage = 'Voce ja enviou suas respostas. Obrigado por contribuir!';
+    const handleAlreadySent = (options = {}) => {
+      setFormDisabled(form, true);
+      if (!options.silent) {
+        showAlert(form, 'info', alreadySentMessage);
+      }
+      if (user) {
+        applySessionToNav(user);
+      }
+    };
+
+    if (isQuestionnaireSent(submissionKey)) {
+      handleAlreadySent();
+      return;
+    }
+
+    try {
+      const status = await apiRequest(ENDPOINTS.questionnaireStatus);
+      if (status?.submitted) {
+        markQuestionnaireSent(submissionKey);
+        handleAlreadySent();
+        return;
+      }
+    } catch (err) {
+      if (err.status === 401) {
+        redirectToLogin('Sessao expirada. Faca login novamente.');
+        return;
+      }
+      console.warn('[questionario] falha ao verificar status', err);
     }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!getToken()) {
-        showAlert(form, 'warning', 'Sessao expirada. Faca login novamente.');
-        clearSession();
-        applySessionToNav(null);
-        setTimeout(() => {
-          window.location.href = 'login.html';
-        }, 1500);
+        redirectToLogin('Sessao expirada. Faca login novamente.');
+        return;
+      }
+      if (isQuestionnaireSent(submissionKey)) {
+        handleAlreadySent();
         return;
       }
       const data = new FormData(form);
@@ -1748,16 +1917,23 @@
           method: 'POST',
           body: payload
         });
+        markQuestionnaireSent(submissionKey);
+        setFormDisabled(form, true);
+        if (user) {
+          applySessionToNav(user);
+        }
+        setFlashMessage('success', 'Questionario enviado com sucesso! Obrigado por compartilhar sua opiniao.');
         window.location.href = 'index.html';
+        return;
       } catch (err) {
         console.error('[questionario] erro', err);
         if (err.status === 401) {
-          clearSession();
-          applySessionToNav(null);
-          showAlert(form, 'warning', 'Sessao expirada. Faca login novamente.');
-          setTimeout(() => {
-            window.location.href = 'login.html';
-          }, 1500);
+          redirectToLogin('Sessao expirada. Faca login novamente.');
+          return;
+        }
+        if (err.status === 409) {
+          markQuestionnaireSent(submissionKey);
+          handleAlreadySent();
           return;
         }
         showAlert(form, 'danger', err.data?.error || 'Erro ao enviar o questionario.');
@@ -1780,6 +1956,7 @@
     ensureMainIdAndSkipLink();
     markActiveNav();
     bootstrapSession();
+    displayPendingFlashMessage();
     initLogin();
     initRegister();
     initForgotPassword();
