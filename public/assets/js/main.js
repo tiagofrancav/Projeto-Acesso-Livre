@@ -73,6 +73,290 @@
     intelectual: ['priority_service']
   };
 
+  let leafletLoadPromise = null;
+
+  function loadLeafletAssets() {
+    if (window.L) {
+      return Promise.resolve();
+    }
+    if (leafletLoadPromise) {
+      return leafletLoadPromise;
+    }
+    leafletLoadPromise = new Promise((resolve, reject) => {
+      try {
+        if (!document.querySelector('link[data-leaflet-fallback="true"]')) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+          link.dataset.leafletFallback = 'true';
+          document.head.appendChild(link);
+        }
+
+        const existingScript = document.querySelector('script[data-leaflet-fallback="true"]');
+        if (existingScript) {
+          if (existingScript.dataset.loaded === 'true') {
+            resolve();
+            return;
+          }
+          existingScript.addEventListener(
+            'load',
+            () => {
+              existingScript.dataset.loaded = 'true';
+              resolve();
+            },
+            { once: true }
+          );
+          existingScript.addEventListener(
+            'error',
+            () => reject(new Error('Falha ao carregar Leaflet.')),
+            { once: true }
+          );
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.async = true;
+        script.crossOrigin = '';
+        script.dataset.leafletFallback = 'true';
+        script.addEventListener(
+          'load',
+          () => {
+            script.dataset.loaded = 'true';
+            resolve();
+          },
+          { once: true }
+        );
+        script.addEventListener(
+          'error',
+          () => reject(new Error('Falha ao carregar Leaflet.')),
+          { once: true }
+        );
+        document.head.appendChild(script);
+      } catch (err) {
+        reject(err);
+      }
+    }).finally(() => {
+      if (!window.L) {
+        leafletLoadPromise = null;
+      }
+    });
+    return leafletLoadPromise;
+  }
+
+  function initLeafletMapElement(mapEl) {
+    if (!mapEl || !window.L) {
+      return null;
+    }
+    if (mapEl._leafletMap) {
+      return mapEl._leafletMap;
+    }
+    const centerLat = Number.parseFloat(mapEl.dataset.centerLat);
+    const centerLng = Number.parseFloat(mapEl.dataset.centerLng);
+    const zoomValue = Number.parseInt(mapEl.dataset.zoom || '13', 10);
+    const lat = Number.isFinite(centerLat) ? centerLat : 0;
+    const lng = Number.isFinite(centerLng) ? centerLng : 0;
+    const zoom = Number.isFinite(zoomValue) ? zoomValue : 13;
+    const map = window.L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lng], zoom);
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    if (mapEl.dataset.marker === 'true' && Number.isFinite(lat) && Number.isFinite(lng)) {
+      mapEl._leafletMarker = window.L.marker([lat, lng]).addTo(map);
+    }
+    mapEl.dataset.leafletInitialized = 'true';
+    mapEl._leafletMap = map;
+    setTimeout(() => {
+      if (typeof map.invalidateSize === 'function') {
+        map.invalidateSize();
+      }
+    }, 0);
+    return map;
+  }
+
+  async function ensureLeafletMap(mapEl) {
+    if (!mapEl) {
+      return null;
+    }
+    if (mapEl._leafletMap) {
+      return mapEl._leafletMap;
+    }
+    if (window.Maps?.initElement) {
+      window.Maps.initElement(mapEl);
+      if (mapEl._leafletMap) {
+        return mapEl._leafletMap;
+      }
+    }
+    if (window.L) {
+      const map = initLeafletMapElement(mapEl);
+      if (map) return map;
+    }
+    await loadLeafletAssets();
+    if (window.Maps?.initElement) {
+      window.Maps.initElement(mapEl);
+      if (mapEl._leafletMap) {
+        return mapEl._leafletMap;
+      }
+    }
+    return initLeafletMapElement(mapEl);
+  }
+
+  async function setMapMarker(mapEl, lat, lng, options = {}) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return null;
+    }
+    const map = await ensureLeafletMap(mapEl);
+    if (!map) {
+      return null;
+    }
+    mapEl.dataset.marker = 'true';
+    if (window.Maps?.setMarker) {
+      window.Maps.setMarker(mapEl, lat, lng, options);
+      return mapEl._leafletMap || map;
+    }
+    if (!window.L) {
+      return null;
+    }
+    if (!mapEl._leafletMarker) {
+      mapEl._leafletMarker = window.L.marker([lat, lng]).addTo(map);
+    } else {
+      mapEl._leafletMarker.setLatLng([lat, lng]);
+    }
+    if (options.pan !== false) {
+      map.setView([lat, lng]);
+    }
+    if (options.invalidate !== false && typeof map.invalidateSize === 'function') {
+      setTimeout(() => map.invalidateSize(), 0);
+    }
+    return map;
+  }
+
+  const MAP_EXTERNAL_SERVICES = [
+    {
+      id: 'google',
+      label: 'Google Maps',
+      icon: 'fab fa-google',
+      buildUrl(lat, lng, name) {
+        const query = name ? `${name} (${lat},${lng})` : `${lat},${lng}`;
+        return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+      }
+    },
+    {
+      id: 'waze',
+      label: 'Waze',
+      icon: 'fab fa-waze',
+      buildUrl(lat, lng) {
+        return `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+      }
+    },
+    {
+      id: 'apple',
+      label: 'Apple Maps',
+      icon: 'fab fa-apple',
+      buildUrl(lat, lng, name) {
+        const nameParam = name ? `&q=${encodeURIComponent(name)}` : '';
+        return `https://maps.apple.com/?ll=${lat},${lng}${nameParam}`;
+      }
+    },
+    {
+      id: 'osm',
+      label: 'OpenStreetMap',
+      icon: 'fas fa-map-marked-alt',
+      buildUrl(lat, lng) {
+        const zoom = 17;
+        return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=${zoom}/${lat}/${lng}`;
+      }
+    },
+    {
+      id: 'bing',
+      label: 'Bing Maps',
+      icon: 'fab fa-microsoft',
+      buildUrl(lat, lng) {
+        return `https://www.bing.com/maps?cp=${lat}~${lng}&lvl=17`;
+      }
+    }
+  ];
+
+  function renderMapExternalLinks(containerId, lat, lng, name) {
+    const container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+    if (!container) {
+      return null;
+    }
+    const latFixed = Number.parseFloat(lat)?.toFixed(6) || lat;
+    const lngFixed = Number.parseFloat(lng)?.toFixed(6) || lng;
+    container.classList.remove('d-none');
+    let list = container.querySelector('.map-external-links');
+    if (!list) {
+      list = document.createElement('div');
+      list.className = 'map-external-links';
+      container.appendChild(list);
+    } else {
+      list.innerHTML = '';
+    }
+    const fragment = document.createDocumentFragment();
+    MAP_EXTERNAL_SERVICES.forEach((service) => {
+      try {
+        const href = service.buildUrl(latFixed, lngFixed, name);
+        if (!href) return;
+        const link = document.createElement('a');
+        link.href = href;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.dataset.service = service.id;
+        const icon = document.createElement('i');
+        icon.className = service.icon;
+        link.appendChild(icon);
+        link.appendChild(document.createTextNode(service.label));
+        fragment.appendChild(link);
+      } catch (err) {
+        console.warn('[map-links] nao foi possivel gerar link', service.id, err);
+      }
+    });
+    list.appendChild(fragment);
+    return list;
+  }
+
+  function setupMapExternalOpen(mapEl, map, lat, lng, name) {
+    if (!mapEl || !map) {
+      return;
+    }
+    const defaultService = MAP_EXTERNAL_SERVICES[0];
+    if (!defaultService || typeof defaultService.buildUrl !== 'function') {
+      return;
+    }
+    const url = defaultService.buildUrl(lat, lng, name);
+    if (!url) {
+      return;
+    }
+    if (mapEl._externalMapClick) {
+      map.off('click', mapEl._externalMapClick);
+    }
+    const clickHandler = () => {
+      window.open(url, '_blank', 'noopener');
+    };
+    map.on('click', clickHandler);
+    mapEl._externalMapClick = clickHandler;
+
+    if (mapEl._externalKeyHandler) {
+      mapEl.removeEventListener('keydown', mapEl._externalKeyHandler);
+    }
+    const keyHandler = (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        window.open(url, '_blank', 'noopener');
+      }
+    };
+    mapEl.addEventListener('keydown', keyHandler);
+    mapEl._externalKeyHandler = keyHandler;
+
+    mapEl.tabIndex = 0;
+    mapEl.setAttribute('role', 'link');
+    mapEl.setAttribute('aria-label', `Abrir local no ${defaultService.label}`);
+    mapEl.setAttribute('title', `Abrir no ${defaultService.label}`);
+    mapEl.dataset.externalLink = url;
+    mapEl.classList.add('map-clickable');
+  }
+
   function getToken() {
     return window.localStorage.getItem(STORAGE_KEYS.token);
   }
@@ -776,6 +1060,18 @@
     const locationButton = document.getElementById('useCurrentLocation');
     const locationButtonDefaultLabel = locationButton?.textContent?.trim() || 'Usar minha localizacao';
     const cepInput = document.getElementById('cep');
+    const geocodeButton = document.getElementById('geocodeFromAddress');
+    const geocodeButtonDefaultLabel = geocodeButton?.textContent?.trim() || 'Marcar pelo endereco';
+    const geocodingConfig = CONFIG.geocoding || {};
+    const mapboxToken =
+      typeof geocodingConfig.mapboxAccessToken === 'string' ? geocodingConfig.mapboxAccessToken.trim() : '';
+    const hasMapboxCountry = Object.prototype.hasOwnProperty.call(geocodingConfig, 'mapboxCountry');
+    const mapboxCountryValue =
+      typeof geocodingConfig.mapboxCountry === 'string' ? geocodingConfig.mapboxCountry.trim() : '';
+    const mapboxCountry = hasMapboxCountry ? mapboxCountryValue : 'BR';
+    const mapboxProximity =
+      typeof geocodingConfig.mapboxProximity === 'string' ? geocodingConfig.mapboxProximity.trim() : '';
+    const canUseGeocoding = geocodingConfig.provider === 'mapbox' && Boolean(mapboxToken);
     let selectedLat = null;
     let selectedLng = null;
     let isRequestingLocation = false;
@@ -822,6 +1118,93 @@
       locationButton.textContent = loading ? 'Buscando localizacao...' : locationButtonDefaultLabel;
     };
 
+    const setGeocodeButtonLoading = (loading) => {
+      if (!geocodeButton) return;
+      geocodeButton.disabled = loading;
+      geocodeButton.textContent = loading ? 'Buscando coordenadas...' : geocodeButtonDefaultLabel;
+    };
+
+    const buildGeocodeQuery = () => {
+      const logradouroValue = document.getElementById('logradouro')?.value.trim() || '';
+      const numeroValue = document.getElementById('numero')?.value.trim() || '';
+      const bairroValue = document.getElementById('bairro')?.value.trim() || '';
+      const cidadeValue = document.getElementById('cidade')?.value.trim() || '';
+      const estadoValue = document.getElementById('estado')?.value.trim().toUpperCase() || '';
+      const cepDigits = (cepInput?.value || '').replace(/\D/g, '').slice(0, 8);
+
+      if (!logradouroValue || !cidadeValue || !estadoValue) {
+        return { query: '', missing: true };
+      }
+
+      const parts = [];
+      parts.push(numeroValue ? `${logradouroValue}, ${numeroValue}` : logradouroValue);
+      if (bairroValue) {
+        parts.push(bairroValue);
+      }
+      parts.push(cidadeValue);
+      parts.push(estadoValue);
+      if (cepDigits) {
+        parts.push(cepDigits);
+      }
+
+      return { query: parts.join(', '), missing: false };
+    };
+
+    const requestGeocodeFromAddress = async () => {
+      if (!canUseGeocoding) {
+        showAlert(form, 'warning', 'Geocodificacao nao configurada. Informe um token valido em APP_CONFIG.');
+        return;
+      }
+
+      const { query, missing } = buildGeocodeQuery();
+      if (!query) {
+        const message = missing
+          ? 'Preencha logradouro, cidade e estado antes de buscar no mapa.'
+          : 'Nao foi possivel montar o endereco para busca.';
+        showAlert(form, 'warning', message);
+        return;
+      }
+
+      setGeocodeButtonLoading(true);
+      try {
+        const url = new URL(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`
+        );
+        url.searchParams.set('access_token', mapboxToken);
+        url.searchParams.set('limit', '1');
+        url.searchParams.set('language', 'pt');
+        if (mapboxCountry) {
+          url.searchParams.set('country', mapboxCountry);
+        }
+        if (mapboxProximity) {
+          url.searchParams.set('proximity', mapboxProximity);
+        }
+
+        const response = await fetch(url.toString());
+        if (!response.ok) {
+          throw new Error(`Geocodificacao falhou (${response.status})`);
+        }
+        const data = await response.json();
+        const feature = data?.features?.[0];
+        const center = Array.isArray(feature?.center) ? feature.center : null;
+        const [lng, lat] = center || [];
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          throw new Error('Endereco nao encontrado. Ajuste os dados e tente novamente.');
+        }
+        setSelectedCoords(lat, lng, { pan: true, invalidate: true });
+        showAlert(form, 'success', 'Localizacao marcada automaticamente a partir do endereco informado.');
+      } catch (err) {
+        console.warn('[cadastro-local] geocode erro', err);
+        const message =
+          err?.message && typeof err.message === 'string'
+            ? err.message
+            : 'Nao foi possivel localizar este endereco.';
+        showAlert(form, 'warning', message);
+      } finally {
+        setGeocodeButtonLoading(false);
+      }
+    };
+
     const handleGeolocationError = (error, options = {}) => {
       if (options.silent) return;
       let message = 'Nao foi possivel acessar sua localizacao.';
@@ -844,21 +1227,29 @@
       if (lngInput) lngInput.value = '';
       if (mapEl) {
         mapEl.dataset.marker = 'false';
+        if (mapEl._leafletMap && mapEl._leafletMarker) {
+          mapEl._leafletMap.removeLayer(mapEl._leafletMarker);
+          mapEl._leafletMarker = null;
+        }
+        if (options.recenter !== false) {
+          const centerLat = Number(mapEl.dataset.centerLat);
+          const centerLng = Number(mapEl.dataset.centerLng);
+          const zoom = Number.parseInt(mapEl.dataset.zoom || '13', 10);
+          if (Number.isFinite(centerLat) && Number.isFinite(centerLng)) {
+            ensureLeafletMap(mapEl)
+              .then((map) => {
+                if (!map) return;
+                map.setView(
+                  [centerLat, centerLng],
+                  Number.isFinite(zoom) ? zoom : map.getZoom()
+                );
+              })
+              .catch(() => { /* noop */ });
+          }
+        }
       }
       setLocationButtonLoading(false);
       updateCoordsHint();
-      if (mapEl?._leafletMap && mapEl._leafletMarker) {
-        mapEl._leafletMap.removeLayer(mapEl._leafletMarker);
-        mapEl._leafletMarker = null;
-      }
-      if (mapEl?._leafletMap && options.recenter !== false) {
-        const centerLat = Number(mapEl.dataset.centerLat);
-        const centerLng = Number(mapEl.dataset.centerLng);
-        const zoom = Number.parseInt(mapEl.dataset.zoom || '13', 10);
-        if (Number.isFinite(centerLat) && Number.isFinite(centerLng)) {
-          mapEl._leafletMap.setView([centerLat, centerLng], Number.isFinite(zoom) ? zoom : mapEl._leafletMap.getZoom());
-        }
-      }
     };
 
     const setSelectedCoords = (lat, lng, options = {}) => {
@@ -870,25 +1261,21 @@
       selectedLng = lng;
       if (latInput) latInput.value = selectedLat.toFixed(6);
       if (lngInput) lngInput.value = selectedLng.toFixed(6);
-      if (mapEl) {
-        mapEl.dataset.marker = 'true';
-        if (window.Maps?.setMarker) {
-          window.Maps.setMarker(mapEl, selectedLat, selectedLng, {
-            pan: options.pan ?? false,
-            invalidate: options.invalidate ?? true
-          });
-        } else if (mapEl._leafletMap && window.L) {
-          if (!mapEl._leafletMarker) {
-            mapEl._leafletMarker = window.L.marker([selectedLat, selectedLng]).addTo(mapEl._leafletMap);
-          } else {
-            mapEl._leafletMarker.setLatLng([selectedLat, selectedLng]);
-          }
-          if (options.pan !== false) {
-            mapEl._leafletMap.setView([selectedLat, selectedLng]);
-          }
-        }
-      }
       updateCoordsHint();
+      if (!mapEl) {
+        return;
+      }
+      setMapMarker(mapEl, selectedLat, selectedLng, {
+        pan: options.pan ?? false,
+        invalidate: options.invalidate ?? true
+      }).catch((err) => {
+        console.warn('[cadastro-local] falha ao posicionar marcador', err);
+        showAlert(
+          form,
+          'warning',
+          'Nao foi possivel atualizar o mapa. Recarregue a pagina e tente novamente.'
+        );
+      });
     };
 
     const requestCurrentLocation = (options = {}) => {
@@ -935,19 +1322,33 @@
     };
 
     if (mapEl) {
-      try {
-        window.Maps?.initElement?.(mapEl);
-        if (mapEl._leafletMap) {
-          mapEl._leafletMap.on('click', (event) => {
-            const { lat, lng } = event.latlng || {};
-            setSelectedCoords(lat, lng, { pan: false });
-          });
-        } else {
-          console.warn('[cadastro-local] mapa nao inicializado');
+      const bindMapClick = (map) => {
+        if (!map || mapEl.dataset.mapClickBound === 'true') {
+          return;
         }
-      } catch (err) {
-        console.warn('[cadastro-local] falha ao iniciar mapa', err);
-      }
+        mapEl.dataset.mapClickBound = 'true';
+        map.on('click', (event) => {
+          const { lat, lng } = event.latlng || {};
+          setSelectedCoords(lat, lng, { pan: false });
+        });
+      };
+
+      ensureLeafletMap(mapEl)
+        .then((map) => {
+          if (!map) {
+            console.warn('[cadastro-local] mapa nao inicializado');
+            return;
+          }
+          bindMapClick(map);
+        })
+        .catch((err) => {
+          console.warn('[cadastro-local] falha ao carregar Leaflet', err);
+          showAlert(
+            form,
+            'warning',
+            'Nao foi possivel carregar o mapa. Verifique sua conexao e recarregue a pagina.'
+          );
+        });
     }
 
     if (locationButton) {
@@ -960,6 +1361,19 @@
         locationButton.addEventListener('click', (event) => {
           event.preventDefault();
           requestCurrentLocation({ pan: true });
+        });
+      }
+    }
+
+    if (geocodeButton) {
+      if (!canUseGeocoding) {
+        geocodeButton.classList.add('d-none');
+      } else if (geocodeButton.dataset.bound !== 'true') {
+        geocodeButton.dataset.bound = 'true';
+        geocodeButton.classList.remove('d-none');
+        geocodeButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          requestGeocodeFromAddress();
         });
       }
     }
@@ -1771,21 +2185,47 @@
           mapEl.setAttribute('data-map', 'true');
           mapEl.classList.remove('d-none');
           mapUnavailable?.classList.add('d-none');
-          if (window.Maps?.initElement) {
-            window.Maps.initElement(mapEl);
-            window.Maps.setMarker?.(mapEl, Number(place.lat), Number(place.lng), { pan: true });
-            setTimeout(() => {
-              if (mapEl._leafletMap?.invalidateSize) {
-                mapEl._leafletMap.invalidateSize();
-              }
-            }, 0);
-          }
+          setMapMarker(mapEl, Number(place.lat), Number(place.lng), { pan: true, invalidate: true })
+            .then((map) => {
+              renderMapExternalLinks('placeMapExternalLinks', Number(place.lat), Number(place.lng), place.name);
+              setupMapExternalOpen(mapEl, map, Number(place.lat), Number(place.lng), place.name);
+            })
+            .catch((err) => {
+              console.warn('[local-detalhes] falha ao exibir mapa', err);
+              showAlert(
+                detailRoot,
+                'warning',
+                'Nao foi possivel mostrar o mapa deste local. Recarregue a pagina e tente novamente.'
+              );
+            });
         } else {
           mapEl.classList.add('d-none');
           if (mapUnavailable) {
             mapUnavailable.classList.remove('d-none');
           }
           mapEl.removeAttribute('data-map');
+          mapEl.classList.remove('map-clickable');
+          mapEl.removeAttribute('role');
+          mapEl.removeAttribute('tabindex');
+          mapEl.removeAttribute('aria-label');
+          mapEl.removeAttribute('title');
+          delete mapEl.dataset.externalLink;
+          if (mapEl._externalMapClick && mapEl._leafletMap) {
+            mapEl._leafletMap.off('click', mapEl._externalMapClick);
+            delete mapEl._externalMapClick;
+          }
+          if (mapEl._externalKeyHandler) {
+            mapEl.removeEventListener('keydown', mapEl._externalKeyHandler);
+            delete mapEl._externalKeyHandler;
+          }
+          const linksContainer = document.getElementById('placeMapExternalLinks');
+          if (linksContainer) {
+            linksContainer.classList.add('d-none');
+            const list = linksContainer.querySelector('.map-external-links');
+            if (list) {
+              list.innerHTML = '';
+            }
+          }
         }
       }
 

@@ -1,5 +1,6 @@
 [data-map] {
   min-height: 280px;
+  height: 320px;
   width: 100%;
   border-radius: 0.5rem;
   overflow: hidden;
@@ -15,3 +16,33 @@ a {
   text-decoration: none;
   color: inherit; /* opcional: mantém a cor do texto */
 }
+
+.map-external-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.map-external-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.875rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.map-external-links a:hover,
+.map-external-links a:focus {
+  background-color: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+  text-decoration: none;
+}
+
+.map-clickable {
+  cursor: pointer;
+}
+
