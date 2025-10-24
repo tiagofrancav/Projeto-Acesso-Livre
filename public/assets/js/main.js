@@ -1062,6 +1062,166 @@
     const cepInput = document.getElementById('cep');
     const geocodeButton = document.getElementById('geocodeFromAddress');
     const geocodeButtonDefaultLabel = geocodeButton?.textContent?.trim() || 'Marcar pelo endereco';
+    const addressInputs = {
+      logradouro: document.getElementById('logradouro'),
+      numero: document.getElementById('numero'),
+      complemento: document.getElementById('complemento'),
+      bairro: document.getElementById('bairro'),
+      cidade: document.getElementById('cidade'),
+      estado: document.getElementById('estado')
+    };
+
+    const dispatchInputEvents = (element) => {
+      if (!element) return;
+      try {
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+        element.dispatchEvent(new Event('change', { bubbles: true }));
+      } catch (_) {
+        /* noop */
+      }
+    };
+
+    const setFieldValue = (element, value) => {
+      if (!element || value === undefined || value === null) return;
+      const text = String(value).trim();
+      if (!text) return;
+      if ((element.value || '').trim() === text) return;
+      element.value = text;
+      dispatchInputEvents(element);
+    };
+
+    const removeDiacritics = (text) => {
+      if (typeof text !== 'string') return '';
+      if (typeof text.normalize !== 'function') return text;
+      return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    };
+
+    const setStateValue = (value) => {
+      const select = addressInputs.estado;
+      if (!select) return;
+      const raw = String(value || '').trim();
+      if (!raw) return;
+      const upperRaw = raw.toUpperCase();
+      const options = Array.from(select.options || []);
+      const findByValue = (val) => options.find((option) => option.value === val);
+
+      let matchedOption = null;
+      if (upperRaw.includes('-')) {
+        matchedOption = findByValue(upperRaw.split('-').pop());
+      }
+      if (!matchedOption && upperRaw.length === 2) {
+        matchedOption = findByValue(upperRaw);
+      }
+      if (!matchedOption) {
+        const normalizedRaw = removeDiacritics(upperRaw);
+        matchedOption = options.find((option) => {
+          const optionValue = option.value.toUpperCase();
+          if (optionValue === normalizedRaw) return true;
+          const optionText = removeDiacritics((option.textContent || '').toUpperCase());
+          return optionText.includes(normalizedRaw);
+        });
+      }
+      if (!matchedOption) return;
+      if (select.value === matchedOption.value) return;
+      select.value = matchedOption.value;
+      dispatchInputEvents(select);
+    };
+
+    const setCepValue = (value) => {
+      if (!cepInput) return;
+      const digits = String(value || '').replace(/\D/g, '').slice(0, 8);
+      if (!digits) return;
+      if (cepInput.value === digits) return;
+      cepInput.value = digits;
+      dispatchInputEvents(cepInput);
+    };
+
+    const hydrateAddressFromCep = async (cepDigits) => {
+      if (!cepDigits || cepDigits.length !== 8) return;
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
+        if (!response.ok) {
+          throw new Error(`viacep responded with ${response.status}`);
+        }
+        const data = await response.json();
+        if (!data || data.erro) {
+          return;
+        }
+        setFieldValue(addressInputs.logradouro, data.logradouro);
+        setFieldValue(addressInputs.bairro, data.bairro);
+        setFieldValue(addressInputs.cidade, data.localidade);
+        setStateValue(data.uf);
+        if (data.complemento) {
+          setFieldValue(addressInputs.complemento, data.complemento);
+        }
+      } catch (err) {
+        console.warn('[cadastro-local] viaCEP erro', err);
+      }
+    };
+
+    const getContextValue = (context, ...types) => {
+      if (!Array.isArray(context)) return null;
+      for (const type of types) {
+        const match = context.find((entry) => typeof entry?.id === 'string' && entry.id.startsWith(`${type}.`));
+        if (match) return match;
+      }
+      return null;
+    };
+
+    const pickFirst = (...values) => values.find((value) => typeof value === 'string' && value.trim());
+
+    const fillAddressFieldsFromFeature = (feature) => {
+      if (!feature || typeof feature !== 'object') return;
+      const context = Array.isArray(feature.context) ? feature.context : [];
+      const props = feature.properties && typeof feature.properties === 'object' ? feature.properties : {};
+
+      const streetValue = pickFirst(props.street, props.road, props.thoroughfare, feature.text, props.name);
+      const numberValue = pickFirst(feature.address, props.address, props.house_number, props.housenumber);
+      const neighborhoodEntry = getContextValue(context, 'neighborhood', 'district', 'suburb');
+      const neighborhoodValue = pickFirst(
+        props.neighborhood,
+        props.district,
+        props.suburb,
+        neighborhoodEntry?.text,
+        neighborhoodEntry?.properties?.name
+      );
+      const cityEntry = getContextValue(context, 'place', 'locality');
+      const cityValue = pickFirst(
+        props.place,
+        props.city,
+        props.locality,
+        cityEntry?.text,
+        cityEntry?.properties?.name
+      );
+      const stateEntry = getContextValue(context, 'region');
+      let stateValue = pickFirst(props.region, props.state, stateEntry?.short_code, stateEntry?.text);
+      if (stateValue) {
+        if (stateValue.includes('-')) {
+          stateValue = stateValue.split('-').pop() || stateValue;
+        } else if (stateValue.trim().length === 2) {
+          stateValue = stateValue.trim();
+        }
+        stateValue = stateValue.toUpperCase();
+      }
+      const postcodeEntry = getContextValue(context, 'postcode');
+      const rawCep = pickFirst(
+        props.postcode,
+        props.postalcode,
+        postcodeEntry?.text,
+        postcodeEntry?.properties?.name,
+        postcodeEntry?.properties?.short_code
+      );
+      if (rawCep) {
+        setCepValue(rawCep);
+      }
+      setFieldValue(addressInputs.logradouro, streetValue);
+      setFieldValue(addressInputs.numero, numberValue);
+      setFieldValue(addressInputs.bairro, neighborhoodValue);
+      setFieldValue(addressInputs.cidade, cityValue);
+      if (stateValue) {
+        setStateValue(stateValue);
+      }
+    };
     const geocodingConfig = CONFIG.geocoding || {};
     const mapboxToken =
       typeof geocodingConfig.mapboxAccessToken === 'string' ? geocodingConfig.mapboxAccessToken.trim() : '';
@@ -1124,31 +1284,46 @@
       geocodeButton.textContent = loading ? 'Buscando coordenadas...' : geocodeButtonDefaultLabel;
     };
 
-    const buildGeocodeQuery = () => {
-      const logradouroValue = document.getElementById('logradouro')?.value.trim() || '';
-      const numeroValue = document.getElementById('numero')?.value.trim() || '';
-      const bairroValue = document.getElementById('bairro')?.value.trim() || '';
-      const cidadeValue = document.getElementById('cidade')?.value.trim() || '';
-      const estadoValue = document.getElementById('estado')?.value.trim().toUpperCase() || '';
-      const cepDigits = (cepInput?.value || '').replace(/\D/g, '').slice(0, 8);
+      const buildGeocodeQuery = () => {
+        const logradouroValue = addressInputs.logradouro?.value.trim() || '';
+        const numeroValue = addressInputs.numero?.value.trim() || '';
+        const bairroValue = addressInputs.bairro?.value.trim() || '';
+        const cidadeValue = addressInputs.cidade?.value.trim() || '';
+        const estadoValue = addressInputs.estado?.value.trim().toUpperCase() || '';
+        const cepDigits = (cepInput?.value || '').replace(/\D/g, '').slice(0, 8);
 
-      if (!logradouroValue || !cidadeValue || !estadoValue) {
+        if (cepDigits.length === 8) {
+          const parts = [];
+          if (logradouroValue) {
+            parts.push(numeroValue ? `${logradouroValue}, ${numeroValue}` : logradouroValue);
+          }
+          if (bairroValue) {
+            parts.push(bairroValue);
+          }
+          if (cidadeValue) {
+            parts.push(cidadeValue);
+          }
+          if (estadoValue) {
+            parts.push(estadoValue);
+          }
+          parts.push(cepDigits);
+          return { query: parts.filter(Boolean).join(', '), missing: false };
+        }
+
+        if (logradouroValue && cidadeValue) {
+          const parts = [
+            numeroValue ? `${logradouroValue}, ${numeroValue}` : logradouroValue,
+            bairroValue,
+            cidadeValue
+          ];
+          if (estadoValue) {
+            parts.push(estadoValue);
+          }
+          return { query: parts.filter(Boolean).join(', '), missing: false };
+        }
+
         return { query: '', missing: true };
-      }
-
-      const parts = [];
-      parts.push(numeroValue ? `${logradouroValue}, ${numeroValue}` : logradouroValue);
-      if (bairroValue) {
-        parts.push(bairroValue);
-      }
-      parts.push(cidadeValue);
-      parts.push(estadoValue);
-      if (cepDigits) {
-        parts.push(cepDigits);
-      }
-
-      return { query: parts.join(', '), missing: false };
-    };
+      };
 
     const requestGeocodeFromAddress = async () => {
       if (!canUseGeocoding) {
@@ -1159,7 +1334,7 @@
       const { query, missing } = buildGeocodeQuery();
       if (!query) {
         const message = missing
-          ? 'Preencha logradouro, cidade e estado antes de buscar no mapa.'
+          ? 'Informe pelo menos o CEP ou logradouro e cidade antes de buscar no mapa.'
           : 'Nao foi possivel montar o endereco para busca.';
         showAlert(form, 'warning', message);
         return;
@@ -1192,7 +1367,8 @@
           throw new Error('Endereco nao encontrado. Ajuste os dados e tente novamente.');
         }
         setSelectedCoords(lat, lng, { pan: true, invalidate: true });
-        showAlert(form, 'success', 'Localizacao marcada automaticamente a partir do endereco informado.');
+        fillAddressFieldsFromFeature(feature);
+        showAlert(form, 'success', 'Localizacao marcada e dados de endereco preenchidos automaticamente.');
       } catch (err) {
         console.warn('[cadastro-local] geocode erro', err);
         const message =
