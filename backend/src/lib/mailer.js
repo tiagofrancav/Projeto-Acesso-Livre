@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { getAppName } from './config.js';
 
 let cachedTransporter = null;
 
@@ -30,24 +31,24 @@ async function getTransporter() {
 }
 
 export async function sendPasswordResetEmail({ to, name, link }) {
-  const appName = process.env.APP_NAME || 'Livre Acesso';
-  const subject = `${appName} - Redefinicao de senha`;
+  const appName = getAppName();
+  const subject = `${appName} - Redefinição de senha`;
   const greetingName = name || to;
   const text = [
-    `Ola ${greetingName},`,
+    `Olá ${greetingName},`,
     '',
-    `Recebemos uma solicitacao para redefinir a senha da sua conta no ${appName}.`,
+    `Recebemos uma solicitação para redefinir a senha da sua conta no ${appName}.`,
     'Para concluir o processo, acesse o link abaixo:',
     link,
     '',
-    'Se voce nao solicitou a redefinicao, ignore este email.',
+    'Se você não solicitou a redefinição, ignore este e-mail.',
     '',
     'Equipe Livre Acesso'
   ].join('\n');
 
   const transporter = await getTransporter();
   if (!transporter) {
-    console.info(`[mail] Redefinicao de senha para ${to}: ${link}`);
+    console.info(`[mail] Redefinição de senha para ${to}: ${link}`);
     return { queued: false, preview: link };
   }
 

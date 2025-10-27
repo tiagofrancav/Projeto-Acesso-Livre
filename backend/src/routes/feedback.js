@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
       where: { userId: req.user.id }
     });
     if (existing) {
-      return res.status(409).json({ error: 'Questionario ja enviado.' });
+      return res.status(409).json({ error: 'Questionário já enviado.' });
     }
     const payload = req.body || {};
     const saved = await prisma.questionnaireResponse.create({

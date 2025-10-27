@@ -2,32 +2,9 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
+import { average, mapFeature, mapPhoto, formatCep } from '../lib/place-utils.js';
 
 const router = express.Router();
-
-function average(values = []) {
-  if (!values.length) return null;
-  const total = values.reduce((sum, value) => sum + value, 0);
-  return Number((total / values.length).toFixed(2));
-}
-
-function mapFeature(placeFeature) {
-  if (!placeFeature?.feature) return null;
-  const { feature } = placeFeature;
-  return { key: feature.key, label: feature.label };
-}
-
-function mapPhoto(photo) {
-  if (!photo) return null;
-  return { id: photo.id, url: photo.url };
-}
-
-function formatCep(cep) {
-  if (!cep) return null;
-  const digits = String(cep).replace(/\D/g, '').slice(0, 8);
-  if (digits.length !== 8) return null;
-  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
-}
 
 function summarizePlace(place) {
   if (!place) return null;
@@ -65,24 +42,26 @@ router.post('/', async (req, res) => {
   try {
     const { nome, sobrenome, email, senha } = req.body || {};
     if (!email || !senha) {
-      return res.status(400).json({ error: 'Email e senha sao obrigatorios.' });
+      return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
     }
-    const hash = await bcrypt.hash(senha, 10);
+    const hash = await bcrypt.hash(String(senha), 10);
     const user = await prisma.user.create({
       data: {
-        email,
+        email: String(email).trim().toLowerCase(),
         passwordHash: hash,
         name: nome || null,
         surname: sobrenome || null
       }
     });
-    res.status(201).json({ id: user.id, email: user.email, name: user.name, surname: user.surname });
+    res
+      .status(201)
+      .json({ id: user.id, email: user.email, name: user.name, surname: user.surname });
   } catch (err) {
     if (err.code === 'P2002') {
-      return res.status(409).json({ error: 'Email ja cadastrado.' });
+      return res.status(409).json({ error: 'E-mail já cadastrado.' });
     }
-    console.error('[users] erro ao cadastrar usuario', err);
-    res.status(500).json({ error: 'Erro ao cadastrar usuario.' });
+    console.error('[users] erro ao cadastrar usuário', err);
+    res.status(500).json({ error: 'Erro ao cadastrar usuário.' });
   }
 });
 
@@ -134,7 +113,7 @@ router.get('/me', requireAuth, async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Usuario nao encontrado.' });
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
     }
 
     res.json({
@@ -149,18 +128,22 @@ router.get('/me', requireAuth, async (req, res) => {
         favorites: user._count?.favorites || 0
       },
       places: (user.places || []).map(summarizePlace).filter(Boolean),
-      favorites: (user.favorites || []).map((favorite) => ({
-        id: `${favorite.userId}-${favorite.placeId}`,
-        addedAt: favorite.createdAt,
-        place: summarizePlace(favorite.place)
-      })).filter((fav) => fav.place),
-      reviews: (user.reviews || []).map((review) => ({
-        id: review.id,
-        rating: review.rating,
-        comment: review.comment,
-        createdAt: review.createdAt,
-        place: summarizePlace(review.place)
-      })).filter((review) => review.place)
+      favorites: (user.favorites || [])
+        .map((favorite) => ({
+          id: `${favorite.userId}-${favorite.placeId}`,
+          addedAt: favorite.createdAt,
+          place: summarizePlace(favorite.place)
+        }))
+        .filter((fav) => fav.place),
+      reviews: (user.reviews || [])
+        .map((review) => ({
+          id: review.id,
+          rating: review.rating,
+          comment: review.comment,
+          createdAt: review.createdAt,
+          place: summarizePlace(review.place)
+        }))
+        .filter((review) => review.place)
     });
   } catch (err) {
     console.error('[users] erro ao carregar perfil', err);
@@ -169,5 +152,3 @@ router.get('/me', requireAuth, async (req, res) => {
 });
 
 export default router;
-
-

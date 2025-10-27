@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';
+import { getJwtSecret } from '../lib/config.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const JWT_SECRET = getJwtSecret();
 
 export async function requireAuth(req, res, next) {
   try {
@@ -23,11 +24,11 @@ export async function requireAuth(req, res, next) {
     next();
   } catch (err) {
     console.error('[auth] erro na verificação do token', err);
-    return res.status(401).json({ error: 'Autenticação necessária.' });
+    res.status(401).json({ error: 'Autenticação necessária.' });
   }
 }
 
-export function optionalAuth(req, res, next) {
+export async function optionalAuth(req, res, next) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) {
@@ -36,20 +37,19 @@ export function optionalAuth(req, res, next) {
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     const userId = typeof payload.sub === 'string' ? parseInt(payload.sub, 10) : payload.sub;
-    if (!userId) {
+    if (!Number.isFinite(userId)) {
       return next();
     }
-    prisma.user.findUnique({ where: { id: userId } }).then((user) => {
-      if (user) {
-        req.user = user;
-      }
-      next();
-    }).catch((err) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } }).catch((err) => {
       console.error('[auth] erro no optionalAuth', err);
-      next();
+      return null;
     });
+    if (user) {
+      req.user = user;
+    }
   } catch (err) {
     console.error('[auth] token inválido', err);
+  } finally {
     next();
   }
 }

@@ -4,7 +4,7 @@ Aplicação full-stack para mapear e compartilhar locais acessíveis. O projeto 
 
 ---
 
-## 🚀 Tecnologias
+## 🛠 Tecnologias
 
 - **Backend:** Node.js + Express, Prisma ORM, PostgreSQL  
 - **Frontend:** HTML/CSS/JS puro, Bootstrap 5, Leaflet + OpenStreetMap  
@@ -12,7 +12,7 @@ Aplicação full-stack para mapear e compartilhar locais acessíveis. O projeto 
 
 ---
 
-## 📁 Estrutura
+## 🗂 Estrutura
 
 ```
 acesso_livre/
@@ -20,20 +20,20 @@ acesso_livre/
 │   ├── src/
 │   │   ├── index.js      # servidor Express
 │   │   ├── routes/       # auth, users, places, feedback
-│   │   └── lib/prisma.js # cliente Prisma
-│   ├── prisma/           # schema e migrations
-│   └── docker-compose.yml
-└── public/           # SPA estática
-    ├── index.html         # landing
-    ├── cadastro-local.html
-    ├── local-detalhes.html
-    ├── perfil.html
-    └── assets/            # CSS, JS, imagens
+│   │   └── lib/          # prisma, helpers, configuração
+│   └── prisma/           # schema e migrations
+├── public/           # SPA estática
+│   ├── index.html         # landing
+│   ├── cadastro-local.html
+│   ├── local-detalhes.html
+│   ├── perfil.html
+│   └── assets/            # CSS, JS, imagens
+└── README.md
 ```
 
 ---
 
-## 🔧 Pré-requisitos
+## ✅ Pré-requisitos
 
 - Node.js 18+
 - Docker Desktop (ou um servidor PostgreSQL acessível)
@@ -48,7 +48,7 @@ acesso_livre/
 git clone https://github.com/seuusuario/livre-acesso.git
 cd livre-acesso
 
-# 2. Backend – dependências
+# 2. Backend — dependências
 cd backend
 npm install
 
@@ -60,33 +60,31 @@ cp .env.example .env
 # ajuste DATABASE_URL, PORT e JWT_SECRET se necessário
 
 # 5. Prisma
-```bash
 npx prisma migrate dev
-# (opcional) especifique --name ao criar a primeira migration
 npx prisma generate
-```
 
 # 6. Inicie a API
 npm run dev
+```
 
 A API ficará acessível em `http://localhost:3000`. Certifique-se de apontar `public/assets/js/config.js` para o mesmo endereço (`apiBaseUrl`).
 
 ---
 
-## 🌐 Frontend
+## 💻 Frontend
 
-O front é estático: abra qualquer HTML da pasta `public/` diretamente no navegador ou sirva com um servidor estático (ex.: `npx serve public`).  
+O front é estático: abra qualquer HTML da pasta `public/` diretamente no navegador ou sirva com um servidor estático (ex.: `npx serve public`).
 
 Principais páginas:
 
-- `index.html` – landing page com missão, carrossel e chamadas para ação
-- `pesquisa.html` – filtros e resultados dinâmicos de locais (via API `/places`)
-- `cadastro-local.html` – formulário para cadastrar novo ponto acessível, com mapa Leaflet
-- `perfil.html` – dashboard do usuário conectado (dados de `/users/me`)
+- `index.html` — landing page com missão, chamadas para ação e destaques
+- `pesquisa.html` — filtros e resultados dinâmicos de locais (via API `/places`)
+- `cadastro-local.html` — formulário para cadastrar novo ponto acessível, com mapa Leaflet
+- `perfil.html` — dashboard do usuário autenticado (dados de `/users/me`)
 
 ---
 
-## 🔒 Autenticação
+## 🔐 Autenticação
 
 - Cadastro: `POST /users`
 - Login: `POST /auth/login`  
@@ -97,14 +95,14 @@ O front salva o token em `localStorage` e injeta automaticamente nas requisiçõ
 
 ---
 
-## 🗺️ Leaflet + OSM
+## 🗺 Leaflet + OSM
 
-Os mapas migraram para Leaflet, consumindo tiles do OpenStreetMap (sem depender de chaves do Google).  
+Os mapas usam Leaflet com tiles do OpenStreetMap (sem depender de chaves do Google).  
 Arquivo-chave: `public/assets/js/maps.js`.
 
 ---
 
-## ✅ Roadmap / pendências
+## 📌 Roadmap / pendências
 
 - [x] Persistir as seleções completas de acessibilidade (checkboxes) no backend
 - [x] Implementar reviews e favoritos (APIs + UI)
@@ -130,8 +128,4 @@ Defina aqui a licença desejada (MIT, Apache, GPL...). Enquanto isso, considere 
 
 ---
 
-Feito com ☕ e propósito por quem acredita em cidades mais inclusivas. Lace o tênis e vamos abrir caminhos juntos! 💚
-
-
-
-
+Feito com ❤ e propósito por quem acredita em cidades mais inclusivas. Vamos abrir caminhos juntos! 🌱

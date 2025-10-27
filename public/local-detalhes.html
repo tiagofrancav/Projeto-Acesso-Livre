@@ -20,12 +20,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Início</a></li>
                     <li class="nav-item"><a class="nav-link" href="pesquisa.html">Buscar Locais</a></li>
                     <li class="nav-item"><a class="nav-link" href="cadastro-local.html">Cadastrar Local</a></li>
                     <li class="nav-item"><a class="nav-link" href="questionario.html">Avaliar Plataforma</a></li>
                 </ul>
-                                <ul class="navbar-nav" data-auth="guest">
+                <ul class="navbar-nav" data-auth="guest">
                     <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
                 </ul>
@@ -48,7 +48,7 @@
         <div class="container" id="placeDetailRoot">
             <div id="placeLoading" class="alert alert-info d-flex align-items-center gap-2" role="status">
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                <span>Carregando informacoes do local...</span>
+                <span>Carregando informações do local...</span>
             </div>
             <div class="row gy-4">
                 <div class="col-lg-8">
@@ -72,59 +72,78 @@
                             <p id="placeDescription" class="mb-4 text-secondary"></p>
 
                             <div id="placeMapWrapper" class="mb-4">
-                                <h2 class="h5">Localizacao</h2>
+                                <h2 class="h5">Localização</h2>
                                 <div id="placeMap" class="rounded overflow-hidden d-none" data-map="lazy" data-zoom="15"></div>
                                 <div class="d-none mt-2" id="placeMapExternalLinks">
                                     <small class="text-muted d-block mb-1">Abrir em:</small>
                                 </div>
-                                <div id="placeMapUnavailable" class="alert alert-light d-none mt-2" role="status">Localizacao nao disponivel.</div>
+                                <div id="placeMapUnavailable" class="alert alert-light d-none mt-2" role="status">Localização não disponível.</div>
                             </div>
 
-                            <div id="placeNoPhotos" class="alert alert-light" role="status">Nenhuma foto cadastrada para este local.</div>
-                            <div id="placeCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
-                                <div class="carousel-indicators" id="placePhotosIndicators"></div>
-                                <div class="carousel-inner rounded" id="placePhotosInner"></div>
-                                <button class="carousel-control-prev" type="button" data-bs-target="#placeCarousel" data-bs-slide="prev">
-                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                    <span class="visually-hidden">Anterior</span>
-                                </button>
-                                <button class="carousel-control-next" type="button" data-bs-target="#placeCarousel" data-bs-slide="next">
-                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                    <span class="visually-hidden">Proximo</span>
-                                </button>
+                            <div id="placeFeatures" class="mb-4">
+                                <h2 class="h5">Recursos de acessibilidade</h2>
+                                <div id="placeFeatureList" class="d-flex flex-wrap gap-2"></div>
+                                <p id="placeFeatureEmpty" class="text-muted d-none mb-0">Nenhum recurso informado.</p>
                             </div>
 
-                            <h2 class="h5">Recursos de acessibilidade</h2>
-                            <div id="placeFeatureList" class="mb-4"></div>
-
-                            <h2 class="h5">Avaliacoes recentes</h2>
-                            <div id="placeReviewsEmpty" class="alert alert-light d-none">Ainda nao ha avaliacoes para este local.</div>
-                            <div id="placeReviewsList"></div>
-                            <section class="mt-4">
-                                <h3 class="h6 text-uppercase text-muted mb-3">Compartilhe sua experiencia</h3>
-                                <div class="alert alert-light border d-none" id="placeReviewLoginWarning">
-                                    Faca login para registrar uma avaliacao. <a href="login.html">Entrar</a>
+                            <div id="placePhotos" class="mb-4">
+                                <h2 class="h5">Galeria de fotos</h2>
+                                <div id="placePhotoCarousel" class="carousel slide d-none" data-bs-ride="carousel">
+                                    <div class="carousel-inner" id="placePhotoCarouselInner"></div>
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#placePhotoCarousel" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Anterior</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#placePhotoCarousel" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Próximo</span>
+                                    </button>
                                 </div>
-                                <form id="placeReviewForm">
-                                    <div class="mb-3">
-                                        <label for="placeReviewRating" class="form-label">Nota</label>
-                                        <select class="form-select" id="placeReviewRating" name="rating" required>
-                                            <option value="">Selecione</option>
-                                            <option value="5">5 - Excelente</option>
-                                            <option value="4">4 - Muito bom</option>
-                                            <option value="3">3 - Bom</option>
-                                            <option value="2">2 - Regular</option>
-                                            <option value="1">1 - Ruim</option>
-                                        </select>
+                                <p id="placePhotoEmpty" class="text-muted d-none mb-0">Nenhuma foto disponível no momento.</p>
+                            </div>
+
+                            <div id="placeReviewsSection">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h2 class="h5 mb-0">Avaliações</h2>
+                                    <button type="button" class="btn btn-outline-success btn-sm" id="reviewNewButton">
+                                        <i class="fas fa-pen me-1"></i>Escrever avaliação
+                                    </button>
+                                </div>
+                                <div id="reviewEmpty" class="alert alert-light" role="status">
+                                    Nenhuma avaliação registrada ainda. Compartilhe a sua experiência!
+                                </div>
+                                <div id="reviewList" class="d-flex flex-column gap-3"></div>
+                                <div id="reviewLoginHint" class="alert alert-warning d-none mt-3" role="status">
+                                    Faça login para avaliar este local.
+                                </div>
+
+                                <div id="reviewFormWrapper" class="card border-0 shadow-sm d-none mt-4">
+                                    <div class="card-body">
+                                        <h3 class="h6 mb-3">Compartilhe sua experiência</h3>
+                                        <form id="reviewForm">
+                                            <div class="mb-3">
+                                                <label for="reviewRating" class="form-label">Nota</label>
+                                                <select class="form-select" id="reviewRating" required>
+                                                    <option value="" selected disabled>Escolha uma nota</option>
+                                                    <option value="5">5 - Excelente</option>
+                                                    <option value="4">4 - Muito bom</option>
+                                                    <option value="3">3 - Bom</option>
+                                                    <option value="2">2 - Regular</option>
+                                                    <option value="1">1 - Ruim</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="reviewComment" class="form-label">Comentário</label>
+                                                <textarea class="form-control" id="reviewComment" rows="3" placeholder="Conte como foi a sua experiência (opcional)"></textarea>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button type="submit" class="btn btn-success">Enviar avaliação</button>
+                                                <button type="button" class="btn btn-outline-secondary" data-action="cancelar-avaliacao">Cancelar</button>
+                                            </div>
+                                        </form>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="placeReviewComment" class="form-label">Comentario (opcional)</label>
-                                        <textarea class="form-control" id="placeReviewComment" name="comment" rows="3" maxlength="800"></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-success">Enviar avaliacao</button>
-                                    <div id="placeReviewFeedback" class="small mt-2"></div>
-                                </form>
-                            </section>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -132,7 +151,7 @@
                 <div class="col-lg-4">
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body">
-                            <h3 class="h6 text-uppercase text-muted mb-3">Informacoes de contato</h3>
+                            <h3 class="h6 text-uppercase text-muted mb-3">Informações de contato</h3>
                             <p class="mb-2"><i class="fas fa-phone me-2"></i><span id="placeContactPhone">-</span></p>
                             <p class="mb-0"><i class="fas fa-globe me-2"></i><span id="placeContactWebsite">-</span></p>
                         </div>
@@ -151,7 +170,7 @@
                                 <i class="far fa-heart me-2"></i>Adicionar aos favoritos
                             </button>
                             <p class="small text-muted mt-2 d-none" id="favoriteHint">
-                                Faca login para favoritar este local.
+                                Faça login para favoritar este local.
                             </p>
                         </div>
                     </div>
@@ -173,5 +192,3 @@
     <script src="assets/js/maps.js"></script>
 </body>
 </html>
-
-

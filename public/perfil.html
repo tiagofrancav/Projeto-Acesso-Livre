@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -6,9 +6,8 @@
     <title>Meu Perfil | Livre Acesso</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
@@ -21,7 +20,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Início</a></li>
                     <li class="nav-item"><a class="nav-link" href="pesquisa.html">Buscar Locais</a></li>
                     <li class="nav-item"><a class="nav-link" href="cadastro-local.html">Cadastrar Local</a></li>
                     <li class="nav-item"><a class="nav-link" href="questionario.html">Avaliar Plataforma</a></li>
@@ -47,12 +46,13 @@
 
     <main class="py-5">
         <div class="container" id="profileRoot">
-            <div id="profileLoading" class="alert alert-info shadow-sm border-0" role="status">Carregando informacoes do perfil...</div>
+            <div id="profileLoading" class="alert alert-info shadow-sm border-0" role="status">Carregando informações do perfil...</div>
 
             <header class="profile-halo text-center mb-4">
                 <i class="bi bi-person-circle" style="font-size: 4rem; color: #6c757d;"></i>
-                <h1 class="mb-0 display-5" id="profileName">Usuario</h1>
+                <h1 class="mb-0 display-5" id="profileName">Usuário</h1>
                 <p class="text-muted-strong mt-1">Bem-vindo ao seu painel de mobilidade</p>
+                <small class="text-muted d-block">Conta criada em <span id="profileMemberSince">--</span></small>
             </header>
 
             <section class="row g-3 mb-5">
@@ -65,7 +65,7 @@
                 <div class="col-12 col-md-4">
                     <div class="stat-pill h-100 d-flex flex-column align-items-center justify-content-center text-center">
                         <h2 id="profileStatsReviews">0</h2>
-                        <p>Avaliacoes enviadas</p>
+                        <p>Avaliações enviadas</p>
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
@@ -79,10 +79,26 @@
             <section class="mb-4">
                 <h2 class="section-title mb-3">Sua jornada</h2>
                 <ul class="nav nav-pills tab-modern" id="profileTabs" role="tablist">
-                    <li class="nav-item" role="presentation"><button class="nav-link active" id="activity-tab" data-bs-toggle="pill" data-bs-target="#activity" type="button" role="tab"><i class="fas fa-bolt me-2"></i>Atividade</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" id="reviews-tab" data-bs-toggle="pill" data-bs-target="#reviews" type="button" role="tab"><i class="fas fa-star-half-stroke me-2"></i>Avaliacoes</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" id="places-tab" data-bs-toggle="pill" data-bs-target="#places" type="button" role="tab"><i class="fas fa-map-location-dot me-2"></i>Meus Locais</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" id="favorites-tab" data-bs-toggle="pill" data-bs-target="#favorites" type="button" role="tab"><i class="fas fa-heart me-2"></i>Favoritos</button></li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="activity-tab" data-bs-toggle="pill" data-bs-target="#activity" type="button" role="tab">
+                            <i class="fas fa-bolt me-2"></i>Atividade
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reviews-tab" data-bs-toggle="pill" data-bs-target="#reviews" type="button" role="tab">
+                            <i class="fas fa-star-half-stroke me-2"></i>Avaliações
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="places-tab" data-bs-toggle="pill" data-bs-target="#places" type="button" role="tab">
+                            <i class="fas fa-map-location-dot me-2"></i>Meus Locais
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="favorites-tab" data-bs-toggle="pill" data-bs-target="#favorites" type="button" role="tab">
+                            <i class="fas fa-heart me-2"></i>Favoritos
+                        </button>
+                    </li>
                 </ul>
             </section>
 

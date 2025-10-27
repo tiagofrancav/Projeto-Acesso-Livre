@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -20,12 +20,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="pesquisa.html">Buscar Locais</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Início</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="pesquisa.html">Buscar Locais</a></li>
                     <li class="nav-item"><a class="nav-link" href="cadastro-local.html">Cadastrar Local</a></li>
                     <li class="nav-item"><a class="nav-link" href="questionario.html">Avaliar Plataforma</a></li>
                 </ul>
-                                <ul class="navbar-nav" data-auth="guest">
+                <ul class="navbar-nav" data-auth="guest">
                     <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="cadastro-usuario.html">Cadastre-se</a></li>
                 </ul>
@@ -46,17 +46,17 @@
 
     <main class="py-4">
         <div class="container">
-            <h1 class="mb-4 page-title">Buscar Locais Acessiveis</h1>
+            <h1 class="mb-4 page-title">Buscar locais acessíveis</h1>
 
             <div class="filter-section">
                 <form id="searchForm" class="mb-4">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="localizacao" class="form-label">Localização</label>
-                            <input type="text" class="form-control" id="localizacao" placeholder="Digite um endereco, cidade ou CEP">
+                            <input type="text" class="form-control" id="localizacao" placeholder="Digite um endereço, cidade ou CEP">
                         </div>
                         <div class="col-md-6">
-                            <label for="tipo-local" class="form-label">Tipo de Local</label>
+                            <label for="tipo-local" class="form-label">Tipo de local</label>
                             <select class="form-select" id="tipo-local">
                                 <option value="todos" selected>Todos os tipos</option>
                                 <option value="restaurante">Restaurante</option>
@@ -70,7 +70,7 @@
                         </div>
                         <div class="col-md-3">
                             <label for="filtroCep" class="form-label">CEP</label>
-                            <input type="text" class="form-control" id="filtroCep" inputmode="numeric" maxlength="8" placeholder="Digite o CEP (somente numeros)">
+                            <input type="text" class="form-control" id="filtroCep" inputmode="numeric" maxlength="8" placeholder="Digite o CEP (somente números)">
                         </div>
                         <div class="col-md-3">
                             <label for="filtroBairro" class="form-label">Bairro</label>
@@ -78,55 +78,26 @@
                         </div>
                         <div class="col-md-3">
                             <label for="filtroCidade" class="form-label">Cidade</label>
-                            <input type="text" class="form-control" id="filtroCidade" placeholder="Ex.: Sao Luis">
+                            <input type="text" class="form-control" id="filtroCidade" placeholder="Ex.: São Luís">
                         </div>
                         <div class="col-md-3">
                             <label for="filtroEstado" class="form-label">Estado</label>
-                            <select class="form-select" id="filtroEstado">
-                                <option value="">Todos os estados</option>
-                                <option value="AC">Acre (AC)</option>
-                                <option value="AL">Alagoas (AL)</option>
-                                <option value="AP">Amapa (AP)</option>
-                                <option value="AM">Amazonas (AM)</option>
-                                <option value="BA">Bahia (BA)</option>
-                                <option value="CE">Ceara (CE)</option>
-                                <option value="DF">Distrito Federal (DF)</option>
-                                <option value="ES">Espirito Santo (ES)</option>
-                                <option value="GO">Goias (GO)</option>
-                                <option value="MA">Maranhao (MA)</option>
-                                <option value="MT">Mato Grosso (MT)</option>
-                                <option value="MS">Mato Grosso do Sul (MS)</option>
-                                <option value="MG">Minas Gerais (MG)</option>
-                                <option value="PA">Para (PA)</option>
-                                <option value="PB">Paraiba (PB)</option>
-                                <option value="PR">Parana (PR)</option>
-                                <option value="PE">Pernambuco (PE)</option>
-                                <option value="PI">Piaui (PI)</option>
-                                <option value="RJ">Rio de Janeiro (RJ)</option>
-                                <option value="RN">Rio Grande do Norte (RN)</option>
-                                <option value="RS">Rio Grande do Sul (RS)</option>
-                                <option value="RO">Rondonia (RO)</option>
-                                <option value="RR">Roraima (RR)</option>
-                                <option value="SC">Santa Catarina (SC)</option>
-                                <option value="SP">Sao Paulo (SP)</option>
-                                <option value="SE">Sergipe (SE)</option>
-                                <option value="TO">Tocantins (TO)</option>
-                            </select>
+                            <input type="text" class="form-control" id="filtroEstado" maxlength="2" placeholder="UF">
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <label for="filtroLogradouro" class="form-label">Logradouro</label>
-                            <input type="text" class="form-control" id="filtroLogradouro" placeholder="Ex.: Rua das Flores">
+                            <input type="text" class="form-control" id="filtroLogradouro" placeholder="Rua/Avenida">
                         </div>
-                        <div class="col-md-2">
-                            <label for="filtroNumero" class="form-label">Numero</label>
+                        <div class="col-md-4">
+                            <label for="filtroNumero" class="form-label">Número</label>
                             <input type="text" class="form-control" id="filtroNumero" placeholder="Ex.: 123">
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <label for="filtroComplemento" class="form-label">Complemento</label>
-                            <input type="text" class="form-control" id="filtroComplemento" placeholder="Bloco, sala ou referencia">
+                            <input type="text" class="form-control" id="filtroComplemento" placeholder="Ex.: Loja 1">
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Tipos de Acessibilidade</label>
+                        <div class="col-12">
+                            <label class="form-label">Tipos de acessibilidade</label>
                             <div class="d-flex flex-wrap gap-3">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="mobilidade">
@@ -134,19 +105,19 @@
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="visual">
-                                    <label class="form-check-label" for="visual">Visual (piso tatil, braile, etc.)</label>
+                                    <label class="form-check-label" for="visual">Visual (piso tátil, braile, etc.)</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="auditiva">
-                                    <label class="form-check-label" for="auditiva">Auditiva (interpretes, legendas, etc.)</label>
+                                    <label class="form-check-label" for="auditiva">Auditiva (intérpretes, legendas, etc.)</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="intelectual">
-                                    <label class="form-check-label" for="intelectual">Intelectual (comunicacao simplificada)</label>
+                                    <label class="form-check-label" for="intelectual">Intelectual (comunicação simplificada)</label>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-12 d-flex gap-2">
+                        <div class="col-12 d-flex gap-2">
                             <button class="btn btn-success" type="submit"><i class="fas fa-search me-2"></i>Buscar</button>
                             <button class="btn btn-outline-secondary" type="reset" id="limparFiltros">Limpar filtros</button>
                         </div>
@@ -184,6 +155,6 @@
     <script src="assets/js/config.js"></script>
     <script src="assets/js/main.js"></script>
     <script src="assets/js/maps.js"></script>
+    <script src="assets/js/pages/pesquisa.js"></script>
 </body>
 </html>
-

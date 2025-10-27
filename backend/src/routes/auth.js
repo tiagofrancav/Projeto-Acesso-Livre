@@ -4,8 +4,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';
 import { sendPasswordResetEmail } from '../lib/mailer.js';
+import { getJwtSecret, getAppName } from '../lib/config.js';
 
 const router = express.Router();
+const JWT_SECRET = getJwtSecret();
 
 function buildPasswordResetLink(req, token) {
   const baseUrl = process.env.APP_PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
@@ -21,18 +23,22 @@ router.post('/login', async (req, res) => {
   try {
     const { email, senha } = req.body || {};
     if (!email || !senha) {
-      return res.status(400).json({ error: 'Email e senha sao obrigatorios.' });
+      return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
     }
-    const user = await prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) {
-      return res.status(401).json({ error: 'Credenciais invalidas.' });
+      return res.status(401).json({ error: 'Credenciais inválidas.' });
     }
-    const ok = await bcrypt.compare(senha, user.passwordHash);
+    const ok = await bcrypt.compare(String(senha), user.passwordHash);
     if (!ok) {
-      return res.status(401).json({ error: 'Credenciais invalidas.' });
+      return res.status(401).json({ error: 'Credenciais inválidas.' });
     }
-    const token = jwt.sign({ sub: user.id, email: user.email }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, email: user.email, name: user.name, surname: user.surname } });
+    const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, name: user.name, surname: user.surname }
+    });
   } catch (err) {
     console.error('[auth] erro login', err);
     res.status(500).json({ error: 'Erro ao efetuar login.' });
@@ -43,12 +49,14 @@ router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body || {};
     if (!email) {
-      return res.status(400).json({ error: 'Email e obrigatorio.' });
+      return res.status(400).json({ error: 'E-mail é obrigatório.' });
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();
     const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-    const responseMessage = { message: 'Se o email estiver cadastrado, voce recebera instrucoes em instantes.' };
+    const responseMessage = {
+      message: 'Se o e-mail estiver cadastrado, você receberá instruções em instantes.'
+    };
 
     if (!user) {
       return res.json(responseMessage);
@@ -84,13 +92,13 @@ router.post('/forgot-password', async (req, res) => {
         link: resetLink
       });
     } catch (mailError) {
-      console.warn('[auth] falha ao enviar email de redefinicao', mailError);
+      console.warn('[auth] falha ao enviar e-mail de redefinição', mailError);
     }
 
     res.json(responseMessage);
   } catch (err) {
     console.error('[auth] erro esqueci senha', err);
-    res.status(500).json({ error: 'Erro ao iniciar redefinicao de senha.' });
+    res.status(500).json({ error: 'Erro ao iniciar redefinição de senha.' });
   }
 });
 
@@ -98,11 +106,11 @@ router.post('/reset-password', async (req, res) => {
   try {
     const { token, senha } = req.body || {};
     if (!token || !senha) {
-      return res.status(400).json({ error: 'Token e nova senha sao obrigatorios.' });
+      return res.status(400).json({ error: 'Token e nova senha são obrigatórios.' });
     }
 
     if (String(senha).length < 8) {
-      return res.status(400).json({ error: 'A nova senha deve conter pelo menos 8 caracteres.' });
+      return res.status(400).json({ error: 'A nova senha deve conter ao menos 8 caracteres.' });
     }
 
     const tokenHash = crypto.createHash('sha256').update(String(token)).digest('hex');
@@ -111,15 +119,15 @@ router.post('/reset-password', async (req, res) => {
     });
 
     if (!resetToken) {
-      return res.status(400).json({ error: 'Token invalido ou expirado.' });
+      return res.status(400).json({ error: 'Token inválido ou expirado.' });
     }
 
     if (resetToken.usedAt) {
-      return res.status(400).json({ error: 'Token ja utilizado.' });
+      return res.status(400).json({ error: 'Token já utilizado.' });
     }
 
     if (resetToken.expiresAt < new Date()) {
-      return res.status(400).json({ error: 'Token invalido ou expirado.' });
+      return res.status(400).json({ error: 'Token inválido ou expirado.' });
     }
 
     const passwordHash = await bcrypt.hash(String(senha), 10);
@@ -141,7 +149,8 @@ router.post('/reset-password', async (req, res) => {
       })
     ]);
 
-    res.json({ message: 'Senha atualizada com sucesso.' });
+    const appName = getAppName();
+    res.json({ message: `Senha atualizada com sucesso. Você já pode acessar o ${appName}.` });
   } catch (err) {
     console.error('[auth] erro redefinir senha', err);
     res.status(500).json({ error: 'Erro ao redefinir senha.' });

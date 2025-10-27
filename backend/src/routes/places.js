@@ -5,6 +5,18 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { prisma } from '../lib/prisma.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { FEATURE_LABELS, buildAccessibilityFlags, getFeatureEntries } from '../lib/features.js';
+import {
+  average,
+  digitsOnly,
+  normalizeCep,
+  formatCep,
+  buildFullAddress,
+  toFloat,
+  parseFeatureKeys,
+  mapFeature,
+  mapPhoto
+} from '../lib/place-utils.js';
 
 import favoritesRouter from './favorites.js';
 import reviewsRouter from './reviews.js';
@@ -23,23 +35,6 @@ const ALLOWED_MIME_TYPES = new Set([
 ]);
 const MAX_PHOTOS = 5;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
-
-const FEATURE_LABELS = {
-  ramp_access: 'Rampa de acesso',
-  elevator: 'Elevador',
-  accessible_bathroom: 'Banheiro adaptado',
-  reserved_parking: 'Vagas especiais',
-  tactile_floor: 'Piso tatil',
-  braille_signage: 'Sinalizacao em braile',
-  audio_description: 'Audio descricao',
-  libras_staff: 'Funcionarios treinados em Libras',
-  subtitles: 'Legendas / Closed Caption',
-  visual_signage: 'Sinalizacao visual',
-  priority_service: 'Atendimento prioritario',
-  wheelchair_available: 'Cadeira de rodas disponivel',
-  accessible_parking: 'Estacionamento acessivel'
-};
-const FEATURE_KEYS = Object.keys(FEATURE_LABELS);
 
 function mimeToExtension(mime) {
   switch (mime) {
@@ -117,69 +112,6 @@ async function buildPhotoData(photoItems = []) {
   return result;
 }
 
-function average(values = []) {
-  if (!values.length) return null;
-  const total = values.reduce((sum, value) => sum + value, 0);
-  return Number((total / values.length).toFixed(2));
-}
-
-function digitsOnly(value) {
-  if (value === null || value === undefined) return '';
-  return String(value).replace(/\D/g, '');
-}
-
-function normalizeCep(value) {
-  const digits = digitsOnly(value).slice(0, 8);
-  return digits.length === 8 ? digits : null;
-}
-
-function formatCep(value) {
-  const digits = normalizeCep(value);
-  if (!digits) return null;
-  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
-}
-
-function buildFullAddress({ street, number, complement, neighborhood, city, state, cep }) {
-  const parts = [];
-  const streetLine = street ? (number ? `${street}, ${number}` : street) : '';
-  if (streetLine) parts.push(streetLine);
-  if (complement) parts.push(complement);
-  if (neighborhood) parts.push(neighborhood);
-  const cityState = [city, state].filter(Boolean).join(' - ');
-  if (cityState) parts.push(cityState);
-  if (cep) {
-    const formatted = formatCep(cep);
-    if (formatted) parts.push(`CEP ${formatted}`);
-  }
-  return parts.join(' | ');
-}
-
-function toFloat(value) {
-  if (value === null || value === undefined || value === '') return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function parseFeatureKeys(raw = []) {
-  if (!raw) return [];
-  const values = Array.isArray(raw) ? raw : [raw];
-  const keys = values
-    .flatMap((item) => (typeof item === 'string' ? item.split(',') : []))
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
-  return Array.from(new Set(keys));
-}
-
-function mapFeature(featureRelation) {
-  if (!featureRelation?.feature) return null;
-  const { feature } = featureRelation;
-  return { key: feature.key, label: feature.label };
-}
-
-function mapPhoto(photo) {
-  if (!photo) return null;
-  return { id: photo.id, url: photo.url };
-}
 
 function basePlaceResponse(place, currentUserId) {
   const ratings = (place.reviews || []).map((review) => review.rating);
@@ -285,18 +217,18 @@ router.post('/', requireAuth, async (req, res) => {
     });
 
     if (!name || !type || !description) {
-      return res.status(400).json({ error: 'Nome, tipo e descricao sao obrigatorios.' });
+      return res.status(400).json({ error: 'Nome, tipo e descrição são obrigatórios.' });
     }
     if (!streetValue || !numberValue || !neighborhoodValue || !cityValue || !stateValue || !cepDigits) {
       return res.status(400).json({
-        error: 'CEP, logradouro, numero, bairro, cidade e estado sao obrigatorios.'
+        error: 'CEP, logradouro, número, bairro, cidade e estado são obrigatórios.'
       });
     }
     if (stateValue.length !== 2) {
       return res.status(400).json({ error: 'Informe a sigla do estado com 2 caracteres.' });
     }
     if (!combinedAddress) {
-      return res.status(400).json({ error: 'Nao foi possivel determinar o endereco do local.' });
+      return res.status(400).json({ error: 'Não foi possível determinar o endereço do local.' });
     }
 
     const featureKeys = parseFeatureKeys(rawFeatures);
@@ -312,12 +244,12 @@ router.post('/', requireAuth, async (req, res) => {
     } catch (error) {
       console.error('[places] erro ao processar fotos', error);
       return res.status(400).json({
-        error: 'Falha ao processar as fotos. Envie imagens JPG, PNG, GIF ou WEBP de ate 5MB.'
+        error: 'Falha ao processar as fotos. Envie imagens JPG, PNG, GIF ou WEBP de até 5MB.'
       });
     }
 
     if (!photoData.length) {
-      return res.status(400).json({ error: 'Nao foi possivel salvar as fotos do local.' });
+      return res.status(400).json({ error: 'Não foi possível salvar as fotos do local.' });
     }
 
     const featureData = featureKeys.map((key) => ({
@@ -329,10 +261,7 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }));
 
-    const accessibilityFlags = FEATURE_KEYS.reduce((acc, key) => {
-      acc[key] = featureKeys.includes(key);
-      return acc;
-    }, {});
+    const accessibilityFlags = buildAccessibilityFlags(featureKeys);
 
     const data = {
       name,
@@ -481,11 +410,15 @@ router.get('/', optionalAuth, async (req, res) => {
   }
 });
 
+router.get('/features', (_req, res) => {
+  res.json(getFeatureEntries());
+});
+
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) {
-      return res.status(400).json({ error: 'Identificador invalido.' });
+      return res.status(400).json({ error: 'Identificador inválido.' });
     }
 
     const place = await prisma.place.findUnique({
@@ -507,7 +440,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     });
 
     if (!place) {
-      return res.status(404).json({ error: 'Local nao encontrado.' });
+      return res.status(404).json({ error: 'Local não encontrado.' });
     }
 
     res.json(detailPlaceResponse(place, req.user?.id));

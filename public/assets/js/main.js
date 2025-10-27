@@ -22,25 +22,10 @@
     place: '/places',
     placeFavorites: (id) => `/places/${id}/favorites`,
     placeReviews: (id) => `/places/${id}/reviews`,
+    features: '/places/features',
     questionnaire: '/feedback',
     questionnaireStatus: '/feedback/me',
     me: '/users/me'
-  };
-
-  const FEATURE_LABELS = {
-    ramp_access: 'Rampa de acesso',
-    elevator: 'Elevador',
-    accessible_bathroom: 'Banheiro adaptado',
-    reserved_parking: 'Vagas especiais',
-    tactile_floor: 'Piso tatil',
-    braille_signage: 'Sinalizacao em braile',
-    audio_description: 'Audio descricao',
-    libras_staff: 'Funcionarios treinados em Libras',
-    subtitles: 'Legendas / Closed Caption',
-    visual_signage: 'Sinalizacao visual',
-    priority_service: 'Atendimento prioritario',
-    wheelchair_available: 'Cadeira de rodas disponivel',
-    accessible_parking: 'Estacionamento acessivel'
   };
 
   const FEATURE_BY_CHECKBOX = {
@@ -72,6 +57,36 @@
     auditiva: ['libras_staff', 'subtitles', 'audio_description'],
     intelectual: ['priority_service']
   };
+
+  let featureLabels = null;
+
+  function getFeatureLabel(key) {
+    if (!key) return '';
+    return (featureLabels && featureLabels[key]) || key;
+  }
+
+  async function ensureFeatureLabels() {
+    if (featureLabels) {
+      return featureLabels;
+    }
+    try {
+      const entries = await apiRequest(ENDPOINTS.features, { skipAuth: true });
+      if (Array.isArray(entries)) {
+        featureLabels = entries.reduce((acc, entry) => {
+          if (entry?.key) {
+            acc[entry.key] = entry.label || entry.key;
+          }
+          return acc;
+        }, {});
+      }
+    } catch (err) {
+      console.warn('[features] falha ao carregar rótulos de acessibilidade', err);
+    }
+    if (!featureLabels) {
+      featureLabels = {};
+    }
+    return featureLabels;
+  }
 
   let leafletLoadPromise = null;
 
@@ -383,6 +398,13 @@
   function clearSession() {
     window.localStorage.removeItem(STORAGE_KEYS.token);
     window.localStorage.removeItem(STORAGE_KEYS.user);
+  }
+
+  function redirectToLogin(message) {
+    if (message) {
+      setFlashMessage('warning', message);
+    }
+    window.location.href = 'login.html';
   }
 
   let questionnaireSentCache = null;
@@ -727,7 +749,7 @@
     if ((!items || !items.length) && flags && typeof flags === 'object') {
       items = Object.entries(flags)
         .filter(([, value]) => Boolean(value))
-        .map(([key]) => ({ key, label: FEATURE_LABELS[key] || key }));
+        .map(([key]) => ({ key, label: getFeatureLabel(key) }));
     }
 
     if (!items.length) {
@@ -745,7 +767,7 @@
     list.forEach((feature) => {
       const badge = document.createElement('span');
       badge.className = 'badge bg-success me-1 mb-1';
-      badge.textContent = feature.label || FEATURE_LABELS[feature.key] || feature.key;
+      badge.textContent = feature.label || getFeatureLabel(feature.key);
       container.appendChild(badge);
     });
 
@@ -779,241 +801,6 @@
     if (value.length <= maxLength) return value;
     return `${value.slice(0, maxLength).trim()}...`;
   }
-  function initLogin() {
-    const form = document.getElementById('loginForm');
-    if (!form) return;
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const email = document.getElementById('email')?.value.trim() || '';
-      const senha = document.getElementById('senha')?.value || '';
-
-      if (!email || !senha) {
-        showAlert(form, 'warning', 'Informe email e senha.');
-        return;
-      }
-
-      try {
-        const data = await apiRequest(ENDPOINTS.login, {
-          method: 'POST',
-          body: { email, senha },
-          skipAuth: true
-        });
-        if (data?.token) {
-          setSession(data.token, data.user || null);
-        }
-        window.location.href = 'perfil.html';
-      } catch (err) {
-        console.error('[login] erro', err);
-        const message = err.data?.error || 'Falha no login. Verifique suas credenciais.';
-        showAlert(form, 'danger', message);
-      }
-    });
-  }
-
-  function updatePasswordStrength(input, bar) {
-    if (!input || !bar) return;
-    const val = input.value || '';
-    let score = 0;
-    if (val.length >= 8) score += 25;
-    if (/[A-Z]/.test(val)) score += 25;
-    if (/[0-9]/.test(val)) score += 25;
-    if (/[^A-Za-z0-9]/.test(val)) score += 25;
-    bar.style.width = `${score}%`;
-    bar.style.backgroundColor = score < 50 ? '#dc3545' : score < 75 ? '#ffc107' : '#28a745';
-  }
-
-  function initRegister() {
-    const form = document.getElementById('registerForm');
-    if (!form) return;
-    const senha = document.getElementById('senha');
-    const confirmar = document.getElementById('confirmarSenha');
-    const bar = document.getElementById('passwordStrengthBar');
-
-    senha?.addEventListener('input', () => updatePasswordStrength(senha, bar));
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const nome = document.getElementById('nome')?.value || '';
-      const sobrenome = document.getElementById('sobrenome')?.value || '';
-      const email = document.getElementById('email')?.value || '';
-      const senhaVal = senha?.value || '';
-      const confirmarVal = confirmar?.value || '';
-
-      if (senhaVal !== confirmarVal) {
-        showAlert(form, 'warning', 'As senhas nao conferem.');
-        return;
-      }
-
-      try {
-        await apiRequest(ENDPOINTS.register, {
-          method: 'POST',
-          body: {
-            nome,
-            sobrenome,
-            email,
-            senha: senhaVal
-          },
-          skipAuth: true
-        });
-        showAlert(form, 'success', 'Cadastro concluido! Agora voce pode fazer login.');
-        setTimeout(() => {
-          window.location.href = 'login.html';
-        }, 1200);
-      } catch (err) {
-        console.error('[register] erro', err);
-        const message = err.data?.error || 'Nao foi possivel concluir o cadastro.';
-        showAlert(form, 'danger', message);
-      }
-    });
-  }
-
-  function initForgotPassword() {
-    const requestSection = document.getElementById('forgotPasswordRequest');
-    const resetSection = document.getElementById('forgotPasswordReset');
-    const successSection = document.getElementById('forgotPasswordSuccess');
-    const requestForm = document.getElementById('forgotPasswordRequestForm');
-    const resetForm = document.getElementById('forgotPasswordResetForm');
-    const successMessage = document.getElementById('forgotPasswordSuccessMessage');
-    const titleEl = document.getElementById('forgotPasswordTitle');
-    const subtitleEl = document.getElementById('forgotPasswordSubtitle');
-    const emailInput = document.getElementById('forgotPasswordEmail');
-    const senhaInput = document.getElementById('resetPasswordSenha');
-    const confirmInput = document.getElementById('resetPasswordConfirmacao');
-
-    if (!requestSection && !resetSection && !successSection) return;
-
-    const params = new URLSearchParams(window.location.search);
-    const state = {
-      token: (params.get('token') || '').trim()
-    };
-
-    const sections = {
-      request: requestSection,
-      reset: resetSection,
-      success: successSection
-    };
-
-    function toggleStep(step) {
-      Object.entries(sections).forEach(([key, element]) => {
-        if (!element) return;
-        element.classList.toggle('d-none', key !== step);
-      });
-    }
-
-    function updateHeader(title, subtitle) {
-      if (titleEl && title) {
-        titleEl.textContent = title;
-      }
-      if (!subtitleEl) return;
-      if (subtitle) {
-        subtitleEl.textContent = subtitle;
-        subtitleEl.classList.remove('d-none');
-      } else {
-        subtitleEl.classList.add('d-none');
-      }
-    }
-
-    function toggleFormSubmitting(form, isSubmitting, loadingLabel) {
-      if (!form) return;
-      const button = form.querySelector('button[type="submit"]');
-      if (!button) return;
-      if (isSubmitting) {
-        if (!button.dataset.originalText) {
-          button.dataset.originalText = button.textContent ?? '';
-        }
-        if (loadingLabel) {
-          button.textContent = loadingLabel;
-        }
-        button.setAttribute('disabled', 'disabled');
-      } else {
-        button.removeAttribute('disabled');
-        if (button.dataset.originalText) {
-          button.textContent = button.dataset.originalText;
-          delete button.dataset.originalText;
-        }
-      }
-    }
-
-    if (state.token) {
-      toggleStep('reset');
-      updateHeader('Definir nova senha', 'Crie uma nova senha para continuar.');
-    } else {
-      toggleStep('request');
-      updateHeader('Recuperar senha', 'Informe seu email e enviaremos um link para redefinir sua senha.');
-    }
-
-    requestForm?.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const email = emailInput?.value.trim().toLowerCase() || '';
-      if (!email) {
-        showAlert(requestForm, 'warning', 'Informe um email valido.');
-        return;
-      }
-
-      toggleFormSubmitting(requestForm, true, 'Enviando...');
-      try {
-        await apiRequest(ENDPOINTS.forgotPassword, {
-          method: 'POST',
-          body: { email },
-          skipAuth: true
-        });
-        toggleStep('success');
-        if (successMessage) {
-          successMessage.textContent = 'Se o email estiver cadastrado, voce recebera um link para redefinir sua senha.';
-        }
-        updateHeader('Confira seu email', 'Enviamos as instrucoes para continuar.');
-      } catch (err) {
-        console.error('[forgot-password] erro', err);
-        const message = err.data?.error || 'Nao foi possivel iniciar a redefinicao.';
-        showAlert(requestForm, 'danger', message);
-      } finally {
-        toggleFormSubmitting(requestForm, false);
-      }
-    });
-
-    resetForm?.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const senha = senhaInput?.value || '';
-      const confirmacao = confirmInput?.value || '';
-
-      if (!state.token) {
-        showAlert(resetForm, 'danger', 'Token de redefinicao ausente ou invalido.');
-        return;
-      }
-
-      if (senha.length < 8) {
-        showAlert(resetForm, 'warning', 'A senha deve conter pelo menos 8 caracteres.');
-        return;
-      }
-
-      if (senha !== confirmacao) {
-        showAlert(resetForm, 'warning', 'As senhas nao conferem.');
-        return;
-      }
-
-      toggleFormSubmitting(resetForm, true, 'Salvando...');
-      try {
-        await apiRequest(ENDPOINTS.resetPassword, {
-          method: 'POST',
-          body: { token: state.token, senha },
-          skipAuth: true
-        });
-        toggleStep('success');
-        if (successMessage) {
-          successMessage.textContent = 'Sua senha foi atualizada com sucesso.';
-        }
-        updateHeader('Senha atualizada', 'Voce ja pode fazer login com a nova senha.');
-      } catch (err) {
-        console.error('[reset-password] erro', err);
-        const message = err.data?.error || 'Nao foi possivel redefinir sua senha.';
-        showAlert(resetForm, 'danger', message);
-      } finally {
-        toggleFormSubmitting(resetForm, false);
-      }
-    });
-  }
-
   function createPreviewElement(entry, container, state) {
     const wrapper = document.createElement('div');
     wrapper.className = 'image-preview';
@@ -1736,342 +1523,6 @@
     });
   }
 
-  function collectSearchFilters() {
-    const locationInput = document.getElementById('localizacao');
-    const typeSelect = document.getElementById('tipo-local');
-    const cepInput = document.getElementById('filtroCep');
-    const bairroInput = document.getElementById('filtroBairro');
-    const cidadeInput = document.getElementById('filtroCidade');
-    const estadoSelect = document.getElementById('filtroEstado');
-    const logradouroInput = document.getElementById('filtroLogradouro');
-    const numeroInput = document.getElementById('filtroNumero');
-    const complementoInput = document.getElementById('filtroComplemento');
-    const selectedFeatures = new Set();
-
-    Object.entries(FEATURE_GROUP_FILTERS).forEach(([checkboxId, featureKeys]) => {
-      const checkbox = document.getElementById(checkboxId);
-      if (checkbox && checkbox.checked) {
-        featureKeys.forEach((key) => selectedFeatures.add(key));
-      }
-    });
-
-    const query = new URLSearchParams();
-    const searchValue = locationInput?.value.trim();
-    if (searchValue) {
-      query.set('search', searchValue);
-    }
-
-    const typeValue = typeSelect?.value || '';
-    if (typeValue && typeValue !== 'todos') {
-      query.set('tipo', typeValue);
-    }
-
-    if (cepInput) {
-      const cepDigits = (cepInput.value || '').replace(/\D/g, '').slice(0, 8);
-      if (cepDigits) {
-        query.set('cep', cepDigits);
-      }
-    }
-    if (bairroInput?.value.trim()) {
-      query.set('bairro', bairroInput.value.trim());
-    }
-    if (cidadeInput?.value.trim()) {
-      query.set('cidade', cidadeInput.value.trim());
-    }
-    if (estadoSelect?.value.trim()) {
-      query.set('estado', estadoSelect.value.trim().toUpperCase());
-    }
-    if (logradouroInput?.value.trim()) {
-      query.set('logradouro', logradouroInput.value.trim());
-    }
-    if (numeroInput?.value.trim()) {
-      query.set('numero', numeroInput.value.trim());
-    }
-    if (complementoInput?.value.trim()) {
-      query.set('complemento', complementoInput.value.trim());
-    }
-
-    if (selectedFeatures.size) {
-      query.set('features', Array.from(selectedFeatures).join(','));
-    }
-
-    return query;
-  }
-
-  function renderSearchResults(results) {
-    const list = document.getElementById('resultsList');
-    const empty = document.getElementById('resultsEmpty');
-    if (!list) return;
-    list.innerHTML = '';
-
-    if (!results || !results.length) {
-      if (empty) empty.classList.remove('d-none');
-      return;
-    }
-    if (empty) empty.classList.add('d-none');
-
-    results.forEach((place) => {
-      const link = document.createElement('a');
-      link.className = 'list-group-item list-group-item-action';
-      link.href = `local-detalhes.html?id=${place.id}`;
-      link.setAttribute('aria-label', `Ver detalhes de ${place.name}`);
-
-      const header = document.createElement('div');
-      header.className = 'd-flex w-100 justify-content-between align-items-start';
-
-      const title = document.createElement('h5');
-      title.className = 'mb-1';
-      title.textContent = place.name;
-      header.appendChild(title);
-
-      const meta = document.createElement('div');
-      meta.className = 'text-end';
-      const typeBadge = document.createElement('span');
-      typeBadge.className = 'badge bg-secondary';
-      typeBadge.textContent = placeTypeLabel(place.type);
-      meta.appendChild(typeBadge);
-      if (place.stats?.averageRating) {
-        const rating = document.createElement('div');
-        rating.className = 'small text-muted';
-        rating.innerHTML = `<i class="fas fa-star text-warning"></i> ${place.stats.averageRating}`;
-        meta.appendChild(rating);
-      }
-      header.appendChild(meta);
-      link.appendChild(header);
-
-      if (place.address) {
-        const address = document.createElement('p');
-        address.className = 'mb-1 text-muted';
-        address.innerHTML = `<i class="fas fa-map-marker-alt me-1"></i>${place.address}`;
-        link.appendChild(address);
-      }
-
-      const featureWrap = document.createElement('div');
-      renderFeatureBadges(featureWrap, place.features || [], { showEmpty: false, limit: 3, flags: place.accessibilityFlags });
-      link.appendChild(featureWrap);
-
-      list.appendChild(link);
-    });
-  }
-
-  function renderHomePlaces(places) {
-    const container = document.getElementById('recentPlaces');
-    const empty = document.getElementById('recentPlacesEmpty');
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (!places || !places.length) {
-      empty?.classList.remove('d-none');
-      return;
-    }
-
-    empty?.classList.add('d-none');
-
-    places.slice(0, 6).forEach((place) => {
-      const col = document.createElement('div');
-      col.className = 'col-sm-6 col-lg-4';
-
-      const card = document.createElement('div');
-      card.className = 'card h-100 border-0 shadow-sm';
-
-      if (place.photos && place.photos.length) {
-        const img = document.createElement('img');
-        img.className = 'card-img-top';
-        img.loading = 'lazy';
-        img.alt = place.name || 'Foto do local';
-        img.src = resolveMediaUrl(place.photos[0].url);
-        card.appendChild(img);
-      } else {
-        const placeholder = document.createElement('div');
-        placeholder.className = 'ratio ratio-16x9 bg-light d-flex align-items-center justify-content-center text-muted';
-        placeholder.textContent = 'Sem foto disponivel';
-        card.appendChild(placeholder);
-      }
-
-      const body = document.createElement('div');
-      body.className = 'card-body d-flex flex-column';
-
-      const header = document.createElement('div');
-      header.className = 'd-flex justify-content-between align-items-start mb-2';
-
-      const title = document.createElement('h5');
-      title.className = 'mb-0';
-      title.textContent = place.name;
-      header.appendChild(title);
-
-      const typeBadge = document.createElement('span');
-      typeBadge.className = 'badge bg-secondary';
-      typeBadge.textContent = placeTypeLabel(place.type);
-      header.appendChild(typeBadge);
-      body.appendChild(header);
-
-      if (place.description) {
-        const description = document.createElement('p');
-        description.className = 'text-muted small';
-        description.textContent = truncateText(place.description, 160);
-        body.appendChild(description);
-      }
-
-      const features = document.createElement('div');
-      renderFeatureBadges(features, place.features || [], { showEmpty: false, limit: 3, flags: place.accessibilityFlags });
-      body.appendChild(features);
-
-      const footer = document.createElement('div');
-      footer.className = 'mt-auto d-flex justify-content-between align-items-center pt-3';
-
-      const ratingWrap = document.createElement('div');
-      ratingWrap.className = 'd-flex align-items-center gap-1 text-muted';
-      renderStars(ratingWrap, place.stats?.averageRating || 0);
-      const ratingValue = document.createElement('small');
-      ratingValue.textContent = place.stats?.averageRating ? place.stats.averageRating.toString() : 'Novo';
-      ratingWrap.appendChild(ratingValue);
-      footer.appendChild(ratingWrap);
-
-      const link = document.createElement('a');
-      link.href = `local-detalhes.html?id=${place.id}`;
-      link.className = 'btn btn-sm btn-outline-success';
-      link.textContent = 'Ver detalhes';
-      footer.appendChild(link);
-
-      body.appendChild(footer);
-      card.appendChild(body);
-      col.appendChild(card);
-      container.appendChild(col);
-    });
-  }
-
-  async function initHome() {
-    const container = document.getElementById('recentPlaces');
-    if (!container) return;
-    const loading = document.getElementById('recentPlacesLoading');
-    const empty = document.getElementById('recentPlacesEmpty');
-
-    loading?.classList.remove('d-none');
-    try {
-      const places = await apiRequest(`${ENDPOINTS.place}?limit=6`, { skipAuth: true });
-      renderHomePlaces(Array.isArray(places) ? places : []);
-    } catch (err) {
-      console.error('[home] erro', err);
-      showAlert(container.parentElement || document.body, 'danger', err.data?.error || 'Erro ao carregar locais recentes.');
-      empty?.classList.remove('d-none');
-    } finally {
-      loading?.classList.add('d-none');
-    }
-  }
-
-  async function loadPlaces() {
-    const spinner = document.getElementById('resultsLoading');
-    if (spinner) spinner.classList.remove('d-none');
-    try {
-      const query = collectSearchFilters();
-      const queryString = query.toString();
-      const endpoint = queryString ? `${ENDPOINTS.place}?${queryString}` : ENDPOINTS.place;
-      if (history && history.replaceState) {
-        const newUrl = queryString ? `${location.pathname}?${queryString}` : location.pathname;
-        history.replaceState(null, '', newUrl);
-      }
-      const results = await apiRequest(endpoint);
-      renderSearchResults(results || []);
-    } catch (err) {
-      console.error('[pesquisa] erro', err);
-      const list = document.getElementById('resultsList');
-      showAlert(list?.parentElement || document.body, 'danger', err.data?.error || 'Erro ao carregar locais.');
-    } finally {
-      if (spinner) spinner.classList.add('d-none');
-    }
-  }
-
-  function initPesquisa() {
-    const form = document.getElementById('searchForm');
-    if (!form) return;
-
-    const params = new URLSearchParams(window.location.search);
-    const locationInput = document.getElementById('localizacao');
-    const typeSelect = document.getElementById('tipo-local');
-    const cepFilter = document.getElementById('filtroCep');
-    const bairroFilter = document.getElementById('filtroBairro');
-    const cidadeFilter = document.getElementById('filtroCidade');
-    const estadoFilter = document.getElementById('filtroEstado');
-    const logradouroFilter = document.getElementById('filtroLogradouro');
-    const numeroFilter = document.getElementById('filtroNumero');
-    const complementoFilter = document.getElementById('filtroComplemento');
-
-    const featureParam = params.get('features');
-    if (featureParam) {
-      const featureSet = new Set(
-        featureParam
-          .split(',')
-          .map((value) => value.trim().toLowerCase())
-          .filter(Boolean)
-      );
-      Object.entries(FEATURE_GROUP_FILTERS).forEach(([checkboxId, featureKeys]) => {
-        const checkbox = document.getElementById(checkboxId);
-        if (!checkbox) return;
-        const hasAll = featureKeys.every((key) => featureSet.has(key));
-        checkbox.checked = hasAll;
-      });
-    }
-
-    if (locationInput && params.get('search')) {
-      locationInput.value = params.get('search');
-    }
-    if (typeSelect && params.get('tipo')) {
-      typeSelect.value = params.get('tipo');
-    }
-    if (cepFilter) {
-      const setCepValue = (value) => {
-        const digits = (value || '').replace(/\D/g, '').slice(0, 8);
-        if (cepFilter.value !== digits) {
-          cepFilter.value = digits;
-        }
-      };
-      if (params.get('cep')) {
-        setCepValue(params.get('cep'));
-      }
-      cepFilter.addEventListener('input', () => setCepValue(cepFilter.value));
-    }
-    if (bairroFilter && params.get('bairro')) {
-      bairroFilter.value = params.get('bairro');
-    }
-    if (cidadeFilter && params.get('cidade')) {
-      cidadeFilter.value = params.get('cidade');
-    }
-    if (estadoFilter && params.get('estado')) {
-      estadoFilter.value = params.get('estado').toUpperCase();
-    }
-    if (logradouroFilter && params.get('logradouro')) {
-      logradouroFilter.value = params.get('logradouro');
-    }
-    if (numeroFilter && params.get('numero')) {
-      numeroFilter.value = params.get('numero');
-    }
-    if (complementoFilter && params.get('complemento')) {
-      complementoFilter.value = params.get('complemento');
-    }
-
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      loadPlaces();
-    });
-    form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
-      checkbox.addEventListener('change', () => loadPlaces());
-    });
-    typeSelect?.addEventListener('change', () => loadPlaces());
-    estadoFilter?.addEventListener('change', () => loadPlaces());
-
-    const clearButton = document.getElementById('limparFiltros');
-    clearButton?.addEventListener('click', (event) => {
-      event.preventDefault();
-      form.reset();
-      form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
-        checkbox.checked = false;
-      });
-      loadPlaces();
-    });
-
-    loadPlaces();
-  }
-
   function renderPlacePhotos(place) {
     const indicators = document.getElementById('placePhotosIndicators');
     const inner = document.getElementById('placePhotosInner');
@@ -2310,6 +1761,7 @@
   async function initLocalDetalhes() {
     const detailRoot = document.getElementById('placeDetailRoot');
     if (!detailRoot) return;
+    await ensureFeatureLabels();
     const params = new URLSearchParams(window.location.search);
     let id = params.get('id');
     if (!id) {
@@ -2557,6 +2009,42 @@
     });
   }
 
+  const App = {
+    CONFIG,
+    API_BASE_URL,
+    ENDPOINTS,
+    FEATURE_BY_CHECKBOX,
+    FEATURE_GROUP_FILTERS,
+    onReady,
+    apiRequest,
+    ensureFeatureLabels,
+    getFeatureLabel,
+    renderFeatureBadges,
+    renderStars,
+    placeTypeLabel,
+    truncateText,
+    resolveMediaUrl,
+    setFlashMessage,
+    displayPendingFlashMessage,
+    showAlert,
+    setSession,
+    getSession,
+    getToken,
+    clearSession,
+    applySessionToNav,
+    redirectToLogin,
+    ensureLeafletMap,
+    loadLeafletAssets,
+    setMapMarker,
+    formatDate,
+    ensureMainIdAndSkipLink,
+    markActiveNav,
+    bootstrapSession,
+    bindLogoutHandlers
+  };
+
+  window.App = Object.assign(window.App || {}, App);
+
   onReady(() => {
     if (location.hash === '#main-content' && history && history.replaceState) {
       history.replaceState(null, '', `${location.pathname}${location.search}`);
@@ -2573,12 +2061,7 @@
     markActiveNav();
     bootstrapSession();
     displayPendingFlashMessage();
-    initLogin();
-    initRegister();
-    initForgotPassword();
     initCadastroLocal();
-    initPesquisa();
-    initHome();
     initLocalDetalhes();
     initPerfil();
     initQuestionario();
@@ -2715,6 +2198,7 @@
   async function initPerfil() {
     const profileRoot = document.getElementById('profileRoot');
     if (!profileRoot) return;
+    await ensureFeatureLabels();
     const token = getToken();
     if (!token) {
       window.location.href = 'login.html';

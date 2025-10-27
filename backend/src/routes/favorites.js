@@ -1,26 +1,21 @@
 import express from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
+import { parsePlaceId } from '../lib/params.js';
 
 const router = express.Router({ mergeParams: true });
-
-function parsePlaceId(req, res) {
-  const placeId = Number(req.params.id);
-  if (!Number.isFinite(placeId)) {
-    res.status(400).json({ error: 'Identificador invalido.' });
-    return null;
-  }
-  return placeId;
-}
 
 router.post('/', requireAuth, async (req, res) => {
   const placeId = parsePlaceId(req, res);
   if (!placeId) return;
 
   try {
-    const place = await prisma.place.findUnique({ where: { id: placeId }, select: { id: true } });
+    const place = await prisma.place.findUnique({
+      where: { id: placeId },
+      select: { id: true }
+    });
     if (!place) {
-      return res.status(404).json({ error: 'Local nao encontrado.' });
+      return res.status(404).json({ error: 'Local não encontrado.' });
     }
 
     await prisma.favorite.upsert({
@@ -41,9 +36,11 @@ router.delete('/', requireAuth, async (req, res) => {
   if (!placeId) return;
 
   try {
-    await prisma.favorite.delete({
-      where: { userId_placeId: { userId: req.user.id, placeId } }
-    }).catch(() => null);
+    await prisma.favorite
+      .delete({
+        where: { userId_placeId: { userId: req.user.id, placeId } }
+      })
+      .catch(() => null);
 
     res.status(204).send();
   } catch (err) {
@@ -53,4 +50,3 @@ router.delete('/', requireAuth, async (req, res) => {
 });
 
 export default router;
-
