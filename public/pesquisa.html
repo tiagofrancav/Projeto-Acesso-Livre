@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscar Locais | Livre Acesso</title>
+    <link rel="icon" href="assets/img/favicon.svg?v=2" type="image/svg+xml">
+    <link rel="shortcut icon" href="assets/img/favicon.svg?v=2">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+4Z06kBCP4Z1cdqUPVHtLt3gLgRnu1Xvl9qf+3D2o=" crossorigin="anonymous">
@@ -46,10 +48,10 @@
 
     <main class="py-4">
         <div class="container">
-            <h1 class="mb-4 page-title">Buscar Locais Acessiveis</h1>
-
-            <div class="filter-section">
-                <form id="searchForm" class="mb-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h1 class="mb-4 page-title">Buscar Locais Acessiveis</h1>
+                    <form id="searchForm">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="localizacao" class="form-label">Localização</label>
@@ -151,11 +153,12 @@
                             <button class="btn btn-outline-secondary" type="reset" id="limparFiltros">Limpar filtros</button>
                         </div>
                     </div>
-                </form>
+                    </form>
+                </div>
             </div>
 
             <div class="row gy-4">
-                <div class="col-lg-8">
+                <div class="col-12">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">

@@ -1,48 +1,330 @@
-[data-map] {
-  min-height: 280px;
-  height: 320px;
-  width: 100%;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
+    [data-map] {
+      min-height: 280px;
+      height: 320px;
+      width: 100%;
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
 
-[data-map] .leaflet-container {
-  width: 100%;
-  height: 100%;
-}
+    [data-map] .leaflet-container {
+      width: 100%;
+      height: 100%;
+    }
+        
+    body {
+      font-family: 'Poppins', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f8f9fa;
+    }
+    
+    /* NAVBAR */
+    .navbar {
+      background: 00FF00;
+      backdrop-filter: blur(6px);
+      position: sticky;
+      top: 0;
+      z-index: 1100; /* fica acima dos cards e dropdown */
+      transition: background-color 0.2s ease, box-shadow 0.2s ease, backdrop-filter 0.2s ease;
+    }
+    .navbar.nav-glass {
+      background: rgba(25, 135, 84, 0.78) !important;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      color: #0f5132;
+    }
+    .navbar.nav-glass .navbar-brand,
+    .navbar.nav-glass .nav-link,
+    .navbar.nav-glass .navbar-nav .nav-link {
+      color: #0f5132 !important;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .navbar-nav .nav-link {
+      color: #fff !important;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    .navbar-nav .nav-link:hover {
+      color: #d1ffd7 !important;
+    }
+
+    /* HERO */
+    .hero-section {
+      background: linear-gradient(360deg, #198754, #198754);
+      color: #fff;
+      padding: 6rem 1rem;
+    }
+    .hero-section h1 {
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .hero-section p {
+      font-size: 1.2rem;
+      font-weight: 400;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+    .hero-section .btn {
+      border-radius: 30px;
+      transition: all 0.3s;
+    }
+    /* Botões do hero com contraste alto */
+    .hero-section .btn-success {
+      background: #ffffff;
+      color: #0f5132;
+      border: 2px solid #ffffff;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      min-width: 190px;
+      letter-spacing: 0.01em;
+    }
+    .hero-section .btn-success:hover,
+    .hero-section .btn-success:focus-visible {
+      background: #dff6e7;
+      color: #0a3622;
+    }
+    .hero-section .btn-outline-secondary {
+      border: 2px solid #ffffff;
+      color: #ffffff;
+      font-weight: 600;
+      min-width: 190px;
+      letter-spacing: 0.01em;
+    }
+    .hero-section .btn-outline-secondary:hover,
+    .hero-section .btn-outline-secondary:focus-visible {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border-color: #ffffff;
+    }
+    .hero-section .btn:focus-visible {
+      outline: 3px solid #f7c948;
+      outline-offset: 2px;
+    }
+    .hero-section .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* FEATURE BADGES (telas de lista/detalhes) */
+    .feature-badge {
+      border-radius: 999px;
+      font-weight: 600;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.95rem;
+      border: none;
+    }
+    .feature-mobilidade {
+      background: #d2f4e8;
+      color: #0f5132;
+    }
+    .feature-visual {
+      background: #dcebff;
+      color: #0b3f7a;
+    }
+    .feature-auditiva {
+      background: #f0e5ff;
+      color: #5b2fb0;
+    }
+    .feature-intelectual,
+    .feature-outros {
+      background: #e9ecef;
+      color: #343a40;
+    }
+
+    /* MAP EXTERNAL LINKS */
+    .map-external-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.6rem;
+      width: 100%;
+      padding: 0.25rem 0;
+    }
+    .map-external-links .badge {
+      background: #198754;
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      letter-spacing: 0.01em;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      min-width: 130px;
+    }
+    /* Carousel (local-detalhes) */
+    #placeCarousel .carousel-item img {
+      width: 100%;
+      height: 600px;
+      object-fit: cover;
+    }
+    /* Ajusta hover de botões danger para não herdarem verde do Bootstrap */
+    .btn-danger {
+      background-color: #dc3545 !important;
+      border-color: #dc3545 !important;
+      color: #fff !important;
+    }
+    .btn-danger:hover,
+    .btn-danger:focus,
+    .btn-danger:active {
+      background-color: #b02a37 !important;
+      border-color: #b02a37 !important;
+      color: #fff !important;
+    }
+
+    /* Links de contato no detalhe (sem sublinhado) */
+    #placeContactWebsite a {
+      text-decoration: none;
+      font-weight: 600;
+    }
+    #placeContactWebsite a:hover,
+    #placeContactWebsite a:focus {
+      text-decoration: none;
+    }
+
+    /* Navbar dropdown acima dos cards */
+    .navbar .dropdown-menu {
+      z-index: 1150;
+      margin-top: 0.6rem;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    }
+
+    /* CARDS */
+    .card {
+      transition: all 0.3s ease;
+      border-radius: 15px;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    /* CHAMADA À AÇÃO */
+    .bg-success-gradient {
+      background: linear-gradient(90deg, #198754, #198754);
+    }
+
+    /* RODAPÉ */
+    .footer {
+      background-color: #111 !important; /* fundo mais elegante */
+    }
+
+    footer a {
+      text-decoration: none;
+      color: white;
+      transition: color 0.3s ease;
+    }
+
+    footer a:hover,
+    footer a:focus-visible {
+      color: #d1ffd7 !important; /* verde claro para harmonizar com o restante */
+      outline: none;
+    }
+    
+    footer h5 {
+      text-decoration: none;
+      color: white;
+    }
+
+    footer li {
+      color:white;
+    }
+    
+    footer p {
+    padding: 0px 8px 8px 0px;
+    text-decoration: none;
+    color:white;
+    }
 
 
-a {
-  text-decoration: none;
-  color: inherit; /* opcional: mantém a cor do texto */
-}
+    .footer hr {
+      border-color: rgb(255, 0, 0);
+    }
 
-.map-external-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
+    .card {
+      border: none;
+      border-radius: 18px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      overflow: hidden;
+      background-color: #fff;
+    }
 
-.map-external-links a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  font-size: 0.875rem;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
 
-.map-external-links a:hover,
-.map-external-links a:focus {
-  background-color: #0d6efd;
-  color: #fff;
-  border-color: #0d6efd;
-  text-decoration: none;
-}
+    .card img {
+      height: 220px;
+      object-fit: cover;
+      border-top-left-radius: 18px;
+      border-top-right-radius: 18px;
+    }
+    .card-body {
+      padding: 1.25rem 1.5rem;
+    }
 
-.map-clickable {
-  cursor: pointer;
-}
+    #recentPlaces h5 {
+      font-weight: 600;
+      color: #212529;
+      margin-bottom: 0.5rem;
+    }
+
+    #recentPlaces p {
+      color: #6c757d;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    #recentPlaces .badge {
+      border-radius: 12px;
+      font-weight: 500;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    #recentPlaces .badge-success {
+      background-color: #198754;
+    }
+
+    #recentPlaces .badge-category {
+      background-color: #dee2e6;
+      color: #495057;
+      font-weight: 600;
+    }
+
+    #recentPlaces .rating {
+      color: #ffc107;
+      font-size: 1.1rem;
+    }
+
+    #recentPlaces .btn-outline-success {
+      border-radius: 30px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    #recentPlaces .btn-outline-success:hover {
+      background-color: #198754;
+      color: #fff;
+    }
+
+    /* Layout harmonioso */
+    #recentPlaces .card + .card {
+      margin-top: 0;
+    }
+
+    a {
+      text-decoration: none;
+    }
 

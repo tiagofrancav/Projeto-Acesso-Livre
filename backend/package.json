@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
-    "prisma:studio": "prisma studio"
+    "prisma:generate": "prisma generate --config prisma.config.js",
+    "prisma:migrate": "prisma migrate dev --config prisma.config.js",
+    "prisma:deploy": "prisma migrate deploy --config prisma.config.js",
+    "prisma:studio": "node ./scripts/prisma-studio.js"
   },
   "dependencies": {
     "@prisma/client": "^7.0.0",

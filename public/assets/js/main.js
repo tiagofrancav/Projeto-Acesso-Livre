@@ -73,6 +73,16 @@
     intelectual: ['priority_service']
   };
 
+  const FEATURE_GROUP_LOOKUP = (() => {
+    const map = {};
+    Object.entries(FEATURE_GROUP_FILTERS).forEach(([group, keys]) => {
+      keys.forEach((key) => {
+        map[key] = group;
+      });
+    });
+    return map;
+  })();
+
   let leafletLoadPromise = null;
 
   function loadLeafletAssets() {
@@ -303,9 +313,12 @@
         link.target = '_blank';
         link.rel = 'noopener';
         link.dataset.service = service.id;
-        const icon = document.createElement('i');
-        icon.className = service.icon;
-        link.appendChild(icon);
+        link.className = 'badge';
+        if (service.icon) {
+          const icon = document.createElement('i');
+          icon.className = `${service.icon} me-1`;
+          link.appendChild(icon);
+        }
         link.appendChild(document.createTextNode(service.label));
         fragment.appendChild(link);
       } catch (err) {
@@ -487,6 +500,20 @@
     setQuestionnaireNavVisible(!shouldHide);
   }
 
+  function setupNavbarGlassEffect() {
+    const nav = document.querySelector('.navbar');
+    if (!nav) return;
+    const apply = () => {
+      if (window.scrollY > 10) {
+        nav.classList.add('nav-glass');
+      } else {
+        nav.classList.remove('nav-glass');
+      }
+    };
+    apply();
+    window.addEventListener('scroll', apply, { passive: true });
+  }
+
   function applySessionToNav(user) {
     const hasUser = Boolean(user && (user.name || user.email));
     document.querySelectorAll('[data-auth="guest"]').forEach((element) => {
@@ -497,9 +524,12 @@
     });
     const nameTarget = document.getElementById('navbarUserName');
     if (nameTarget) {
-      nameTarget.textContent = hasUser
-        ? ([user.name, user.surname].filter(Boolean).join(' ') || user.email || '')
-        : '';
+      const fullName = [user.name, user.surname].filter(Boolean).join(' ') || user.email || '';
+      const firstName =
+        (user.name && user.name.trim().split(/\s+/)[0]) ||
+        (fullName && fullName.trim().split(/\s+/)[0]) ||
+        '';
+      nameTarget.textContent = hasUser ? firstName : '';
     }
     updateQuestionnaireNavVisibility(hasUser ? user : null);
   }
@@ -609,6 +639,16 @@
     const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
     return `${API_BASE_URL}${normalizedPath}`;
   }
+
+  const PLACEHOLDER_IMG =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450" fill="none">' +
+        '<rect width="800" height="450" rx="12" fill="#e9ecef"/>' +
+        '<path d="M160 330h480L520 240l-90 90-90-130-180 130Z" fill="#ced4da"/>' +
+        '<circle cx="290" cy="170" r="40" fill="#dee2e6"/>' +
+      '</svg>'
+    );
 
   function setFormDisabled(form, disabled = true) {
     if (!form) return;
@@ -744,7 +784,8 @@
 
     list.forEach((feature) => {
       const badge = document.createElement('span');
-      badge.className = 'badge bg-success me-1 mb-1';
+      const group = FEATURE_GROUP_LOOKUP[feature.key] || 'outros';
+      badge.className = `badge feature-badge feature-${group} me-1 mb-1`;
       badge.textContent = feature.label || FEATURE_LABELS[feature.key] || feature.key;
       container.appendChild(badge);
     });
@@ -1080,13 +1121,11 @@
     const token = getToken();
 
     if (!token) {
-      showAlert(form, 'warning', 'E necessario estar logado para cadastrar um local.');
-      form.querySelectorAll('input, select, textarea, button').forEach((element) => {
-        element.setAttribute('disabled', 'disabled');
-      });
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 1500);
+      showAlert(form, 'warning', 'É necessário estar logado para cadastrar um local.');
+      setFormDisabled(form, true);
+      clearSession();
+      applySessionToNav(null);
+      window.location.href = 'login.html';
       return;
     }
 
@@ -1704,6 +1743,10 @@
         img.loading = 'lazy';
         img.alt = place.name || 'Foto do local';
         img.src = resolveMediaUrl(place.photos[0].url);
+        img.onerror = () => {
+          img.onerror = null;
+          img.src = PLACEHOLDER_IMG;
+        };
         card.appendChild(img);
       } else {
         const placeholder = document.createElement('div');
@@ -1920,6 +1963,10 @@
       img.alt = `Foto ${index + 1} de ${place.name}`;
       img.loading = 'lazy';
       img.src = resolveMediaUrl(photo.url);
+      img.onerror = () => {
+        img.onerror = null;
+        img.src = PLACEHOLDER_IMG;
+      };
       item.appendChild(img);
       inner.appendChild(item);
 
@@ -1938,19 +1985,25 @@
     });
   }
 
-  function renderPlaceReviewsList(reviews) {
+  function renderPlaceReviewsList(reviews, showAll = false) {
     const wrapper = document.getElementById('placeReviewsList');
     const empty = document.getElementById('placeReviewsEmpty');
+    const toggle = document.getElementById('placeReviewsToggle');
     if (!wrapper) return;
     wrapper.innerHTML = '';
 
     if (!reviews || !reviews.length) {
       if (empty) empty.classList.remove('d-none');
+      if (toggle) toggle.classList.add('d-none');
       return;
     }
     if (empty) empty.classList.add('d-none');
 
-    reviews.forEach((review) => {
+    const MAX_VISIBLE = 4;
+    const visible = showAll ? reviews : reviews.slice(0, MAX_VISIBLE);
+    const hasMore = reviews.length > MAX_VISIBLE && !showAll;
+
+    visible.forEach((review) => {
       const card = document.createElement('div');
       card.className = 'card border-0 shadow-sm mb-3';
       const body = document.createElement('div');
@@ -1984,16 +2037,27 @@
       card.appendChild(body);
       wrapper.appendChild(card);
     });
+
+    if (toggle) {
+      toggle.classList.toggle('d-none', !hasMore);
+      toggle.textContent = 'Ver mais';
+      toggle.onclick = null;
+      if (hasMore) {
+        toggle.addEventListener('click', () => {
+          renderPlaceReviewsList(reviews, true);
+        }, { once: true });
+      }
+    }
   }
 
   function applyFavoriteButtonState(button, isFavorite) {
     if (!button) return;
     button.dataset.favoriteState = isFavorite ? 'on' : 'off';
-    button.classList.toggle('btn-success', isFavorite);
-    button.classList.toggle('btn-outline-success', !isFavorite);
+    button.classList.toggle('btn-danger', isFavorite);
+    button.classList.toggle('btn-outline-danger', !isFavorite);
     button.innerHTML = isFavorite
-      ? '<i class="fas fa-heart me-2"></i>Remover dos favoritos'
-      : '<i class="far fa-heart me-2"></i>Adicionar aos favoritos';
+      ? '<i class="fas fa-heart me-2 text-white"></i>Remover dos favoritos'
+      : '<i class="far fa-heart me-2 text-danger"></i>Adicionar aos favoritos';
   }
 
   async function toggleFavorite(button, placeId) {
@@ -2067,6 +2131,7 @@
 
   function setupReviewForm(form, placeId, onSuccess) {
     const warning = document.getElementById('placeReviewLoginWarning');
+    const warningBtn = document.getElementById('placeReviewLoginBtn');
     const feedback = document.getElementById('placeReviewFeedback');
     const token = getToken();
 
@@ -2078,6 +2143,13 @@
     if (!token) {
       form.classList.add('d-none');
       warning?.classList.remove('d-none');
+      if (warningBtn && warningBtn.dataset.bound !== 'true') {
+        warningBtn.dataset.bound = 'true';
+        warningBtn.addEventListener('click', (event) => {
+          event.preventDefault();
+          window.location.href = 'login.html';
+        });
+      }
       return;
     }
 
@@ -2146,6 +2218,9 @@
     const loading = document.getElementById('placeLoading');
     const favoriteButton = document.getElementById('favoriteToggle');
     const favoriteHint = document.getElementById('favoriteHint');
+    const shareCopyLink = document.getElementById('shareCopyLink');
+    const shareCopyLinkText = document.getElementById('shareCopyLinkText');
+    const shareCopyLinkIcon = document.getElementById('shareCopyLinkIcon');
 
     if (!id) {
       loading?.classList.add('d-none');
@@ -2168,10 +2243,27 @@
       const siteEl = document.getElementById('placeContactWebsite');
       if (siteEl) {
         if (place.website) {
-          siteEl.innerHTML = `<a href="${place.website}" target="_blank" rel="noopener">Site oficial</a>`;
+          const displayUrl = place.website.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+          siteEl.innerHTML = `<a href="${place.website}" class="text-success fw-semibold" target="_blank" rel="noopener noreferrer">${displayUrl}</a>`;
         } else {
           siteEl.textContent = 'Nao informado';
         }
+      }
+      if (shareCopyLink) {
+        const pageUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
+        shareCopyLink.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(pageUrl);
+            if (shareCopyLinkText) shareCopyLinkText.textContent = 'Link copiado!';
+            if (shareCopyLinkIcon) shareCopyLinkIcon.className = 'fas fa-check me-2';
+            setTimeout(() => {
+              if (shareCopyLinkText) shareCopyLinkText.textContent = 'Copiar link deste local';
+              if (shareCopyLinkIcon) shareCopyLinkIcon.className = 'fas fa-link me-2';
+            }, 2000);
+          } catch (err) {
+            console.warn('Não foi possível copiar o link:', err);
+          }
+        }, { once: true });
       }
 
       const mapEl = document.getElementById('placeMap');
@@ -2280,13 +2372,11 @@
     const form = document.getElementById('formQuestionario');
     if (!form) return;
     const redirectToLogin = (message) => {
-      showAlert(form, 'warning', message);
+      showAlert(form, 'warning', message || 'Sessao expirada. Faca login novamente.');
       setFormDisabled(form, true);
       clearSession();
       applySessionToNav(null);
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 1500);
+      window.location.href = 'login.html';
     };
 
     let token = getToken();
@@ -2395,6 +2485,7 @@
 
     ensureMainIdAndSkipLink();
     markActiveNav();
+    setupNavbarGlassEffect();
     bootstrapSession();
     displayPendingFlashMessage();
     initLogin();
@@ -2550,8 +2641,12 @@
     try {
       const me = await apiRequest(ENDPOINTS.me);
       const fullName = [me.name, me.surname].filter(Boolean).join(' ') || me.email;
+      const firstName =
+        (me.name && me.name.trim().split(/\s+/)[0]) ||
+        (fullName && fullName.trim().split(/\s+/)[0]) ||
+        '';
       document.getElementById('profileName')?.replaceChildren(document.createTextNode(fullName));
-      document.getElementById('navbarUserName')?.replaceChildren(document.createTextNode(fullName));
+      document.getElementById('navbarUserName')?.replaceChildren(document.createTextNode(firstName));
       document.getElementById('profileMemberSince')?.replaceChildren(document.createTextNode(formatDate(me.createdAt)));
       document.getElementById('profileStatsPlaces')?.replaceChildren(document.createTextNode(me.stats?.places ?? 0));
       document.getElementById('profileStatsReviews')?.replaceChildren(document.createTextNode(me.stats?.reviews ?? 0));

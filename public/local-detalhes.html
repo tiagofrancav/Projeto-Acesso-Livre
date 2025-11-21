@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalhes do Local | Livre Acesso</title>
+    <link rel="icon" href="assets/img/favicon.svg?v=2" type="image/svg+xml">
+    <link rel="shortcut icon" href="assets/img/favicon.svg?v=2">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+4Z06kBCP4Z1cdqUPVHtLt3gLgRnu1Xvl9qf+3D2o=" crossorigin="anonymous">
@@ -76,6 +78,7 @@
                                 <div id="placeMap" class="rounded overflow-hidden d-none" data-map="lazy" data-zoom="15"></div>
                                 <div class="d-none mt-2" id="placeMapExternalLinks">
                                     <small class="text-muted d-block mb-1">Abrir em:</small>
+                                    <div class="d-flex flex-wrap align-items-center gap-2 map-external-links"></div>
                                 </div>
                                 <div id="placeMapUnavailable" class="alert alert-light d-none mt-2" role="status">Localizacao nao disponivel.</div>
                             </div>
@@ -100,10 +103,12 @@
                             <h2 class="h5">Avaliacoes recentes</h2>
                             <div id="placeReviewsEmpty" class="alert alert-light d-none">Ainda nao ha avaliacoes para este local.</div>
                             <div id="placeReviewsList"></div>
+                            <button type="button" id="placeReviewsToggle" class="btn btn-success">Ver mais</button>
                             <section class="mt-4">
                                 <h3 class="h6 text-uppercase text-muted mb-3">Compartilhe sua experiencia</h3>
-                                <div class="alert alert-light border d-none" id="placeReviewLoginWarning">
-                                    Faca login para registrar uma avaliacao. <a href="login.html">Entrar</a>
+                                <div class="alert alert-light border d-none d-flex justify-content-between align-items-center" id="placeReviewLoginWarning">
+                                    <span>Faca login para registrar uma avaliacao.</span>
+                                    <a href="login.html" id="placeReviewLoginBtn" class="btn btn-success btn-sm text-white">Entrar</a>
                                 </div>
                                 <form id="placeReviewForm">
                                     <div class="mb-3">
@@ -141,10 +146,11 @@
                     <div class="card border-0 shadow-sm">
                         <div class="card-body">
                             <h3 class="h6 text-uppercase text-muted mb-3">Compartilhe</h3>
-                            <div class="d-flex gap-2">
-                                <a href="#" class="btn btn-outline-success btn-sm" role="button" aria-label="Compartilhar no WhatsApp"><i class="fab fa-whatsapp"></i></a>
-                                <a href="#" class="btn btn-outline-success btn-sm" role="button" aria-label="Compartilhar no Facebook"><i class="fab fa-facebook-f"></i></a>
-                                <a href="#" class="btn btn-outline-success btn-sm" role="button" aria-label="Compartilhar no X"><i class="fab fa-x-twitter"></i></a>
+                            <div class="d-grid">
+                                <button type="button" id="shareCopyLink" class="btn btn-success" aria-label="Copiar link deste local">
+                                    <i class="fas fa-link me-2" id="shareCopyLinkIcon"></i>
+                                    <span id="shareCopyLinkText">Copiar link deste local</span>
+                                </button>
                             </div>
                             <hr class="my-3">
                             <button type="button" class="btn btn-outline-success w-100" id="favoriteToggle">

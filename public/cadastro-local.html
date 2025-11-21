@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro Local | Acesso Livre</title>
+    <link rel="icon" href="assets/img/favicon.svg?v=2" type="image/svg+xml">
+    <link rel="shortcut icon" href="assets/img/favicon.svg?v=2">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -60,105 +62,108 @@
     </nav>
 
     <!-- Conteúdo Principal -->
-    <main class="py-5">
+    <main class="py-4">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-success text-white">
-                            <h2 class="h5 mb-0">Cadastrar Novo Local Acessí­vel</h2>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="mb-4 page-title">Cadastrar Novo Local Acessiveis</h1>
+                    <form id="cadastroLocalForm" class="row g-4">
+                        <div class="col-12">
+                            <label for="nomeLocal" class="form-label">Nome do Local*</label>
+                            <input type="text" class="form-control" id="nomeLocal" required>
                         </div>
 
-                        <div class="card-body">
-                            <form id="cadastroLocalForm">
-                                <div class="mb-3">
-                                    <label for="nomeLocal" class="form-label">Nome do Local*</label>
-                                    <input type="text" class="form-control" id="nomeLocal" required>
-                                </div>
+                        <div class="col-12">
+                            <label for="tipoLocal" class="form-label">Tipo de Local*</label>
+                            <select class="form-select" id="tipoLocal" required>
+                                <option value="" selected disabled>Selecione o tipo</option>
+                                <option value="restaurante">Restaurante</option>
+                                <option value="shopping">Shopping Center</option>
+                                <option value="parque">Parque/PraÃ§a</option>
+                                <option value="hotel">Hotel/Pousada</option>
+                                <option value="cinema">Cinema/Teatro</option>
+                                <option value="supermercado">Supermercado</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
 
-                                <div class="mb-3">
-                                    <label for="tipoLocal" class="form-label">Tipo de Local*</label>
-                                    <select class="form-select" id="tipoLocal" required>
-                                        <option value="" selected disabled>Selecione o tipo</option>
-                                        <option value="restaurante">Restaurante</option>
-                                        <option value="shopping">Shopping Center</option>
-                                        <option value="parque">Parque/PraÃ§a</option>
-                                        <option value="hotel">Hotel/Pousada</option>
-                                        <option value="cinema">Cinema/Teatro</option>
-                                        <option value="supermercado">Supermercado</option>
-                                        <option value="outro">Outro</option>
+                        <div class="col-12">
+                            <h5 class="h6 mb-3">Endereco</h5>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="cep" class="form-label">CEP*</label>
+                                    <input type="text" class="form-control" id="cep" name="cep" inputmode="numeric" pattern="\d{8}" autocomplete="postal-code" maxlength="8" required>
+                                </div>
+                                <div class="col-md-9">
+                                    <label for="logradouro" class="form-label">Logradouro*</label>
+                                    <input type="text" class="form-control" id="logradouro" name="logradouro" autocomplete="address-line1" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="numero" class="form-label">Numero*</label>
+                                    <input type="text" class="form-control" id="numero" name="numero" autocomplete="address-line2" required>
+                                </div>
+                                <div class="col-md-9">
+                                    <label for="complemento" class="form-label">Complemento</label>
+                                    <input type="text" class="form-control" id="complemento" name="complemento" autocomplete="additional-name" placeholder="Apartamento, bloco ou ponto de referencia">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="bairro" class="form-label">Bairro*</label>
+                                    <input type="text" class="form-control" id="bairro" name="bairro" autocomplete="address-level3" required>
+                                </div>
+                                <div class="col-md-5">
+                                    <label for="cidade" class="form-label">Cidade*</label>
+                                    <input type="text" class="form-control" id="cidade" name="cidade" autocomplete="address-level2" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="estado" class="form-label">Estado*</label>
+                                    <select class="form-select" id="estado" name="estado" autocomplete="address-level1" required>
+                                        <option value="" selected disabled>UF</option>
+                                        <option value="AC">AC</option>
+                                        <option value="AL">AL</option>
+                                        <option value="AP">AP</option>
+                                        <option value="AM">AM</option>
+                                        <option value="BA">BA</option>
+                                        <option value="CE">CE</option>
+                                        <option value="DF">DF</option>
+                                        <option value="ES">ES</option>
+                                        <option value="GO">GO</option>
+                                        <option value="MA">MA</option>
+                                        <option value="MT">MT</option>
+                                        <option value="MS">MS</option>
+                                        <option value="MG">MG</option>
+                                        <option value="PA">PA</option>
+                                        <option value="PB">PB</option>
+                                        <option value="PR">PR</option>
+                                        <option value="PE">PE</option>
+                                        <option value="PI">PI</option>
+                                        <option value="RJ">RJ</option>
+                                        <option value="RN">RN</option>
+                                        <option value="RS">RS</option>
+                                        <option value="RO">RO</option>
+                                        <option value="RR">RR</option>
+                                        <option value="SC">SC</option>
+                                        <option value="SP">SP</option>
+                                        <option value="SE">SE</option>
+                                        <option value="TO">TO</option>
                                     </select>
                                 </div>
-
-                                <div class="mb-3">
-                                    <h5 class="h6 mb-3">Endereco</h5>
-                                    <div class="row g-3">
-                                        <div class="col-md-3">
-                                            <label for="cep" class="form-label">CEP*</label>
-                                            <input type="text" class="form-control" id="cep" name="cep" inputmode="numeric" pattern="\d{8}" autocomplete="postal-code" maxlength="8" required>
-                                        </div>
-                                        <div class="col-md-9">
-                                            <label for="logradouro" class="form-label">Logradouro*</label>
-                                            <input type="text" class="form-control" id="logradouro" name="logradouro" autocomplete="address-line1" required>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="numero" class="form-label">Numero*</label>
-                                            <input type="text" class="form-control" id="numero" name="numero" autocomplete="address-line2" required>
-                                        </div>
-                                        <div class="col-md-9">
-                                            <label for="complemento" class="form-label">Complemento</label>
-                                            <input type="text" class="form-control" id="complemento" name="complemento" autocomplete="additional-name" placeholder="Apartamento, bloco ou ponto de referencia">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="bairro" class="form-label">Bairro*</label>
-                                            <input type="text" class="form-control" id="bairro" name="bairro" autocomplete="address-level3" required>
-                                        </div>
-                                        <div class="col-md-5">
-                                            <label for="cidade" class="form-label">Cidade*</label>
-                                            <input type="text" class="form-control" id="cidade" name="cidade" autocomplete="address-level2" required>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="estado" class="form-label">Estado*</label>
-                                            <select class="form-select" id="estado" name="estado" autocomplete="address-level1" required>
-                                                <option value="" selected disabled>UF</option>
-                                                <option value="AC">AC</option>
-                                                <option value="AL">AL</option>
-                                                <option value="AP">AP</option>
-                                                <option value="AM">AM</option>
-                                                <option value="BA">BA</option>
-                                                <option value="CE">CE</option>
-                                                <option value="DF">DF</option>
-                                                <option value="ES">ES</option>
-                                                <option value="GO">GO</option>
-                                                <option value="MA">MA</option>
-                                                <option value="MT">MT</option>
-                                                <option value="MS">MS</option>
-                                                <option value="MG">MG</option>
-                                                <option value="PA">PA</option>
-                                                <option value="PB">PB</option>
-                                                <option value="PR">PR</option>
-                                                <option value="PE">PE</option>
-                                                <option value="PI">PI</option>
-                                                <option value="RJ">RJ</option>
-                                                <option value="RN">RN</option>
-                                                <option value="RS">RS</option>
-                                                <option value="RO">RO</option>
-                                                <option value="RR">RR</option>
-                                                <option value="SC">SC</option>
-                                                <option value="SP">SP</option>
-                                                <option value="SE">SE</option>
-                                                <option value="TO">TO</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
+                            </div>
+                        </div>
 
                                 <div class="mb-3">
                                     <label class="form-label">Localizacao no mapa*</label>
                                     <p class="form-text">Clique no mapa para marcar o ponto exato do estabelecimento.</p>
                                     <div id="map" data-map="true" data-map-mode="picker" data-center-lat="-2.525730" data-center-lng="-44.271690" data-zoom="13" data-marker="false"></div>
-                                    <input type="hidden" id="latitude" name="latitude">
-                                    <input type="hidden" id="longitude" name="longitude">
+                                    <div class="row g-3 mt-2">
+                                        <div class="col-md-6">
+                                            <label for="latitude" class="form-label">Latitude</label>
+                                            <input type="text" class="form-control" id="latitude" name="latitude" readonly aria-describedby="mapSelectedCoords">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="longitude" class="form-label">Longitude</label>
+                                            <input type="text" class="form-control" id="longitude" name="longitude" readonly aria-describedby="mapSelectedCoords">
+                                        </div>
+                                    </div>
                                     <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
                                         <button type="button" class="btn btn-outline-success btn-sm" id="useCurrentLocation">Usar minha localizacao</button>
                                         <button type="button" class="btn btn-outline-primary btn-sm" id="geocodeFromAddress">Marcar pelo endereco</button>
